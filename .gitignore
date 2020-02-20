@@ -1,7 +1,3 @@
-# Manual stuff
-Assets/StreamingAssets/config.ini
-Assets/StreamingAssets/config.ini.meta
-
 # Get latest from https://github.com/github/gitignore/blob/master/Unity.gitignore
 #
 /[Ll]ibrary/
@@ -63,3 +59,7 @@ sysinfo.txt
 
 # Crashlytics generated file
 crashlytics-build.properties
+
+# Manual stuff
+Assets/StreamingAssets/config.ini
+Assets/StreamingAssets/config.ini.meta
