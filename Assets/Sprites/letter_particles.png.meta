@@ -1,0 +1,727 @@
+fileFormatVersion: 2
+guid: dc71f702a13be9b4897db8137ab91d6d
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2283777180870538414
+    second: letter_particles_0
+  - first:
+      213: 6893894879438884533
+    second: letter_particles_1
+  - first:
+      213: 3394307346622798403
+    second: letter_particles_2
+  - first:
+      213: 4950927859394842602
+    second: letter_particles_3
+  - first:
+      213: 339116223326222449
+    second: letter_particles_4
+  - first:
+      213: 6139355287510001183
+    second: letter_particles_5
+  - first:
+      213: -6480754907776726048
+    second: letter_particles_6
+  - first:
+      213: 5351600620562678434
+    second: letter_particles_7
+  - first:
+      213: -8541466183624700990
+    second: letter_particles_8
+  - first:
+      213: -4464509900914831949
+    second: letter_particles_9
+  - first:
+      213: 951399084175812674
+    second: letter_particles_10
+  - first:
+      213: 2448322940790876281
+    second: letter_particles_11
+  - first:
+      213: 7947495009607925357
+    second: letter_particles_12
+  - first:
+      213: 584721444063589182
+    second: letter_particles_13
+  - first:
+      213: -1836597765639019630
+    second: letter_particles_14
+  - first:
+      213: -6898875101863564722
+    second: letter_particles_15
+  - first:
+      213: -2282682902009233759
+    second: letter_particles_16
+  - first:
+      213: -7823060911170148402
+    second: letter_particles_17
+  - first:
+      213: 8202631145082791712
+    second: letter_particles_18
+  - first:
+      213: -7648308978996861207
+    second: letter_particles_19
+  - first:
+      213: 546277321555587283
+    second: letter_particles_20
+  - first:
+      213: -5129924180948854639
+    second: letter_particles_21
+  - first:
+      213: 3788845579520145792
+    second: letter_particles_22
+  - first:
+      213: -6753089949483087481
+    second: letter_particles_23
+  - first:
+      213: -8342897202103680284
+    second: letter_particles_24
+  - first:
+      213: 4201180370432704161
+    second: letter_particles_25
+  externalObjects: {}
+  serializedVersion: 10
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: -1
+    aniso: -1
+    mipBias: -100
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: letter_particles_0
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 71
+        width: 36
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c80ca9979bdf6d84eac8fba4b465dc84
+      internalID: 2283777180870538414
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_1
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 71
+        width: 33
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4940f94319ff4d74a8122254ed05361c
+      internalID: 6893894879438884533
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_2
+      rect:
+        serializedVersion: 2
+        x: 146
+        y: 70
+        width: 30
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4a183b7b49ddbec41b8ce0521ee4f285
+      internalID: 3394307346622798403
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_3
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 71
+        width: 33
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cb8ca769de24aa648b5799dac75819ed
+      internalID: 4950927859394842602
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_4
+      rect:
+        serializedVersion: 2
+        x: 274
+        y: 71
+        width: 28
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8d02d372e0f7fd246adb362837b8f59f
+      internalID: 339116223326222449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_5
+      rect:
+        serializedVersion: 2
+        x: 339
+        y: 71
+        width: 28
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 75ac1c2fae571c04bbfc55db02344637
+      internalID: 6139355287510001183
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_6
+      rect:
+        serializedVersion: 2
+        x: 400
+        y: 70
+        width: 32
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b43e766133a50c149be864282e08e419
+      internalID: -6480754907776726048
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_7
+      rect:
+        serializedVersion: 2
+        x: 464
+        y: 71
+        width: 33
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 85a23ae66cbc9b044887b042a6d47cc8
+      internalID: 5351600620562678434
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_8
+      rect:
+        serializedVersion: 2
+        x: 539
+        y: 71
+        width: 10
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a8ae56d49e5eafd4fa9466714d6be142
+      internalID: -8541466183624700990
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_9
+      rect:
+        serializedVersion: 2
+        x: 596
+        y: 69
+        width: 25
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 82d736c38fbcc0946bd7d2f5f7202d02
+      internalID: -4464509900914831949
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_10
+      rect:
+        serializedVersion: 2
+        x: 655
+        y: 71
+        width: 36
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 468a144fcedf2824c90821ec96f0e5e5
+      internalID: 951399084175812674
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_11
+      rect:
+        serializedVersion: 2
+        x: 724
+        y: 70
+        width: 25
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0ae26f59e53a79a4fba9a062190c9246
+      internalID: 2448322940790876281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_12
+      rect:
+        serializedVersion: 2
+        x: 776
+        y: 71
+        width: 48
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8bceba3c0ec273140a7b01e85e0c6b4b
+      internalID: 7947495009607925357
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_13
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 7
+        width: 34
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 84f94110a6ad28a4d9f28d41eaadda64
+      internalID: 584721444063589182
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_14
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 6
+        width: 35
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 70a4d05885a0e044cb548f0bfde48c84
+      internalID: -1836597765639019630
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_15
+      rect:
+        serializedVersion: 2
+        x: 145
+        y: 7
+        width: 31
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d572b366c58828045867193b8211e675
+      internalID: -6898875101863564722
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_16
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 0
+        width: 40
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a17be927901d71a42bfc5e9dc4740512
+      internalID: -2282682902009233759
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_17
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 7
+        width: 34
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c166851c3e4aba349935d4ed9cc45262
+      internalID: -7823060911170148402
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_18
+      rect:
+        serializedVersion: 2
+        x: 336
+        y: 6
+        width: 31
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7a1fc729eea306e4e9d92212ede507a0
+      internalID: 8202631145082791712
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_19
+      rect:
+        serializedVersion: 2
+        x: 400
+        y: 7
+        width: 31
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2fec1c313d2074a419222775bbf01e98
+      internalID: -7648308978996861207
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_20
+      rect:
+        serializedVersion: 2
+        x: 464
+        y: 5
+        width: 33
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3c07589ae6d20e84abed0453dd75443a
+      internalID: 546277321555587283
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_21
+      rect:
+        serializedVersion: 2
+        x: 526
+        y: 7
+        width: 36
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: da32786c3781dca44bab8220302ad664
+      internalID: -5129924180948854639
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_22
+      rect:
+        serializedVersion: 2
+        x: 581
+        y: 7
+        width: 54
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ac6b5f993f305694dbf509f879846052
+      internalID: 3788845579520145792
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_23
+      rect:
+        serializedVersion: 2
+        x: 653
+        y: 7
+        width: 38
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c0a997cc402572d48a952ef1cac9f0f0
+      internalID: -6753089949483087481
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_24
+      rect:
+        serializedVersion: 2
+        x: 717
+        y: 7
+        width: 37
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ab3b769e253fea440ba6780ece76af43
+      internalID: -8342897202103680284
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: letter_particles_25
+      rect:
+        serializedVersion: 2
+        x: 784
+        y: 7
+        width: 31
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 730eac5cd9e1c334aab127732a38a37c
+      internalID: 4201180370432704161
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+  spritePackingTag: 
+  pSDRemoveMatte: 0
+  pSDShowRemoveMatteOption: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
