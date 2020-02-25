@@ -23,6 +23,12 @@ public class Util {
         }
     }
 
+    public static string JoinGrammatically(string[] strings) {
+        if (strings.Length > 1) {
+            strings[strings.Length - 1] = "and " + strings[strings.Length - 1];
+        }
+        return string.Join(strings.Length < 3 ? " " : ", ", strings);
+    }
     public static string RemoveDiacritics(string text) {
         if (string.IsNullOrWhiteSpace(text))
             return text;

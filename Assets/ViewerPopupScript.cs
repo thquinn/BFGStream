@@ -51,15 +51,16 @@ public class ViewerPopupScript : MonoBehaviour
             rectTransform = (RectTransform)transform;
         }
         Vector3 localPosition = transform.localPosition;
-        bool swap = (playerCount == 2 && player == 1) || player > 1;
+        bool swap = (playerCount < 4 && player > 0) || (playerCount == 4 && player > 1);
         if (swap) {
             localPosition.x *= -1;
             tmp.alignment = TextAlignmentOptions.BottomLeft;
         }
-        bool shrinkAndReposition = (playerCount == 3 && player < 2) || playerCount == 4;
+        bool shrinkAndReposition = (playerCount == 3 && player > 0) || playerCount == 4;
         if (shrinkAndReposition) {
-            int[] xOffs = new int[] { -720, -330, 255, 655 };
-            localPosition.x = xOffs[player];
+            int[] xOffs = new int[] { -720, -330, 330, 720 };
+            int offsetIndex = playerCount == 3 && player > 0 ? player + 1 : player;
+            localPosition.x = xOffs[offsetIndex];
             rectTransform.sizeDelta = new Vector2(400, 100);
         }
         transform.localPosition = localPosition;

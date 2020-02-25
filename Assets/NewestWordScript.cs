@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class NewestWordScript : MonoBehaviour
 {
-    static Vector3 centerPosition = new Vector3(0, 0, -20);
+    static Vector3 centerPosition = new Vector3(0, 0, -100);
     static int winDelayFrames = 60;
 
     CanvasGroup canvasGroup;
@@ -19,12 +19,15 @@ public class NewestWordScript : MonoBehaviour
     public void Set(int player, int playerCount, string word, bool win) {
         rectTransform = (RectTransform)transform;
         TextMeshProUGUI tmp = GetComponent<TextMeshProUGUI>();
-        bool simpleSwap = (playerCount == 2 && player == 1) || (playerCount == 3 && player == 2);
+        bool simpleSwap = player == 1 && playerCount == 2;
         if (simpleSwap) {
             Vector3 localPosition = transform.localPosition;
             localPosition.x *= -1;
             transform.localPosition = localPosition;
-        } else if (playerCount > 2) {
+        } else if (playerCount > 2 && !(player == 0 && playerCount == 3)) {
+            if (player > 0 && playerCount == 3) {
+                player++;
+            }
             int[] xOffs = new int[] { -644, -232, 232, 644 };
             Vector3 localPosition = transform.localPosition;
             localPosition.x = xOffs[player];
@@ -71,6 +74,7 @@ public class NewestWordScript : MonoBehaviour
             float t = Mathf.Clamp01((frames - winDelayFrames) / 60f);
             
             t = Util.EaseInOutQuad(t);
+            originalPosition.z = centerPosition.z;
             transform.localPosition = Vector3.Lerp(originalPosition, centerPosition, t);
             transform.localScale = new Vector3(1 + 2 * t, 1 + 2 * t, 1);
             rectTransform.sizeDelta = Vector2.Lerp(rectTransform.sizeDelta, new Vector2(550, 80), .002f);

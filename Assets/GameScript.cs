@@ -46,6 +46,7 @@ public class GameScript : MonoBehaviour {
     public static Color SUB_COLOR = new Color(1, 0.6471f, 0.7059f);
     public static string SUB_COLOR_HEX_STRING = "#" + ColorUtility.ToHtmlStringRGB(GameScript.SUB_COLOR);
     public static int VIEWER_POPUP_COUNT = 8;
+    public static Regex WORD_REGEX = new Regex("[^a-z0-9]");
 
     public static Dictionary<string, string> viewerTitles = new Dictionary<string, string>();
     public bool spinnerOn;
@@ -57,9 +58,13 @@ public class GameScript : MonoBehaviour {
     public GameObject ui;
     // Bottom panel.
     public GameObject newestWordPrefab, viewerPopupPrefab;
-    public TextMeshProUGUI[] playerLabels;
-    public TextMeshProUGUI[] scoreLabels;
-    public LockScript[] lockScripts;
+    public TextMeshProUGUI[] playerLabels2, playerLabels4;
+    public TextMeshProUGUI[] scoreLabels2, scoreLabels4;
+    public LockScript[] lockScripts2, lockScripts4;
+    public Sprite[] playerAvatars;
+    TextMeshProUGUI[] playerLabels;
+    TextMeshProUGUI[] scoreLabels;
+    LockScript[] lockScripts;
     NewestWordScript[] newestWordScripts;
     // Top panel.
     public TextMeshProUGUI roundTMP, roundPointsTMP, viewersTMP;
@@ -79,6 +84,9 @@ public class GameScript : MonoBehaviour {
     // Sound.
     public AudioSource sfxLock, sfxWin, sfxCountdown;
     float countdownVolume;
+    // Text resources.
+    public TextAsset lemmas;
+    HashSet<Tuple<string, string>> lemmaMatches;
 
     // Game configuration.
     string[] players = CONFIG["host_usernames"].Split(',');
@@ -100,15 +108,17 @@ public class GameScript : MonoBehaviour {
     ViewerPopupScript[] viewerPopupScripts;
     bool freezeLeaderboard;
     int logFileSuffix;
-    
 
     void Start() {
-        for (int i = 0; i < displayNames.Length; i++) {
-            playerLabels[i].text = displayNames[i];
-        }
         wordsPanel.transform.localPosition = new Vector3(1300, 470, 0);
         wordsTMP.text = "";
         countdownVolume = sfxCountdown.volume;
+        foreach (TextMeshProUGUI playerLabel in playerLabels2) {
+            playerLabel.transform.parent.gameObject.SetActive(false);
+        }
+        foreach (TextMeshProUGUI playerLabel in playerLabels4) {
+            playerLabel.transform.parent.gameObject.SetActive(false);
+        }
 
         newestWordScripts = new NewestWordScript[players.Length];
 
@@ -132,10 +142,46 @@ public class GameScript : MonoBehaviour {
         } catch (Exception e) {
             Debug.Log(string.Format("Loading viewer scores failed: {0}", e));
         }
+        LoadLemmas(); // TODO: Once this is tested, disable in the editor.
     }
 
     void Update() {
         float time = Time.time;
+
+        // Update player UI references.
+        if (playerLabels == null || playerLabels.Length != players.Length) {
+            if (playerLabels != null) {
+                foreach (TextMeshProUGUI playerLabel in playerLabels) {
+                    playerLabel.transform.parent.gameObject.SetActive(false);
+                }
+            }
+            if (players.Length == 2) {
+                playerLabels = playerLabels2;
+                scoreLabels = scoreLabels2;
+                lockScripts = lockScripts2;
+            } else if (players.Length == 3) {
+                playerLabels = new TextMeshProUGUI[] { playerLabels2[0], playerLabels4[2], playerLabels4[3] };
+                scoreLabels = new TextMeshProUGUI[] { scoreLabels2[0], scoreLabels4[2], scoreLabels4[3] };
+                lockScripts = new LockScript[] { lockScripts2[0], lockScripts4[2], lockScripts4[3] };
+            } else if (players.Length == 4) {
+                playerLabels = playerLabels4;
+                scoreLabels = scoreLabels4;
+                lockScripts = lockScripts4;
+            }
+            for (int i = 0; i < playerLabels.Length; i++) {
+                playerLabels[i].transform.parent.gameObject.SetActive(true);
+                playerLabels[i].text = displayNames[i];
+                Sprite avatar = null;
+                foreach (Sprite s in playerAvatars) {
+                    if (s.name == players[i]) {
+                        avatar = s;
+                        break;
+                    }
+                }
+                playerLabels[i].transform.parent.GetChild(0).GetChild(0).GetComponent<SpriteRenderer>().sprite = avatar;
+            }
+        }
+
         if (!freezeLeaderboard) {
             viewerScores.Update(time);
         }
@@ -167,27 +213,24 @@ public class GameScript : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.Alpha3) && players.Length >= 3) {
             pendingWords[2] = pendingWords[2] == null ? "sandwich" : null;
         }
-        if (Input.GetKeyDown(KeyCode.Alpha4)) {
-            pendingWords[0] = pendingWords[0] == null ? "panini" : null;
+        if (Input.GetKeyDown(KeyCode.Alpha4) && players.Length >= 4) {
+            pendingWords[3] = pendingWords[3] == null ? "sandwich" : null;
         }
         if (Input.GetKeyDown(KeyCode.Alpha5)) {
+            pendingWords[0] = pendingWords[0] == null ? "panini" : null;
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha6)) {
             pendingWords[1] = pendingWords[1] == null ? "hoagie" : null;
         }
-        if (Input.GetKeyDown(KeyCode.Alpha6) && players.Length >= 3) {
+        if (Input.GetKeyDown(KeyCode.Alpha7) && players.Length >= 3) {
             pendingWords[2] = pendingWords[2] == null ? "grinder" : null;
         }
-        if (Input.GetKeyDown(KeyCode.Alpha7)) {
-            scores[0] += UnityEngine.Random.Range(1, 11) * 50;
-        }
-        if (Input.GetKeyDown(KeyCode.Alpha8)) {
-            scores[1] += UnityEngine.Random.Range(1, 11) * 50;
-        }
-        if (Input.GetKeyDown(KeyCode.Alpha9)) {
-            scores[2] += UnityEngine.Random.Range(1, 11) * 50;
+        if (Input.GetKeyDown(KeyCode.Alpha8) && players.Length >= 4) {
+            pendingWords[3] = pendingWords[3] == null ? "sub" : null;
         }
         if (Input.GetKeyDown(KeyCode.S)) {
             lock (botScript.events) {
-                botScript.events.Add(new Event(EventType.SUBSCRIPTION, "jim", null, "2", "2"));
+                botScript.events.Add(new Event(EventType.SUBSCRIPTION, "jim", null, "2", null));
             }
         }
         if (Input.GetKeyDown(KeyCode.B)) {
@@ -195,6 +238,10 @@ public class GameScript : MonoBehaviour {
                 botScript.events.Add(new Event(EventType.BITS, "barbobarbo", "101", "Tom—you're the man!"));
             }
         }
+        if (Input.GetKeyDown(KeyCode.E)) {
+            viewerWords.Add("wurstwurstwurstwurst", "sandwich");
+        }
+
         // GUBED GUBED GUBED
 
         // Get inputs.
@@ -378,7 +425,7 @@ public class GameScript : MonoBehaviour {
                         }
                         viewerScores.FinalizeScores();
                         if (points != 0) {
-                            toastsScript.Toast(ToastType.AWARD, string.Format("{0} {1} awarded {2} {3} for submitting \"{4}\"!", JoinGrammatically(awardedViewers.ToArray()), awardedViewers.Count == 1 ? "was" : "were", points, points == 1 ? "point" : "points", word.ToUpper()));
+                            toastsScript.Toast(ToastType.AWARD, string.Format("{0} {1} awarded {2} {3} for submitting \"{4}\"!", JoinUsernamesGrammatically(awardedViewers.ToArray()), awardedViewers.Count == 1 ? "was" : "were", points, points == 1 ? "point" : "points", word.ToUpper()));
                         }
                     }
                 } else if (kvp.Value.StartsWith("!w ")) {
@@ -475,14 +522,16 @@ public class GameScript : MonoBehaviour {
                         continue;
                     }
                     string target = e.info[1].Trim();
+                    bool percentage = bool.Parse(e.info[2]);
                     for (int i = 0; i < displayNames.Length; i++) {
                         if (string.Equals(displayNames[i], target, StringComparison.OrdinalIgnoreCase)) {
-                            if (scores[i] == 0) {
+                            int deduction = percentage ? Mathf.RoundToInt(scores[1] * .1f) : Mathf.Min(scores[i], 1000);
+                            if (deduction == 0) {
                                 toastsScript.Toast(ToastType.PUNISH, string.Format("{0} tried to punish {1}... but there was nothing left to take!", GetUsernameString(user), displayNames[i]));
                             } else {
-                                toastsScript.Toast(ToastType.PUNISH, string.Format("{0} has punished {1}! -{2} {3}!", GetUsernameString(user), displayNames[i], Math.Min(scores[i], 1000), scores[i] == 1 ? "point" : "points"));
-                                scores[i] = Math.Max(0, scores[i] - 1000);
+                                toastsScript.Toast(ToastType.PUNISH, string.Format("{0} has punished {1}! \u2011{2} {3}!", GetUsernameString(user), displayNames[i], deduction, deduction == 1 ? "point" : "points"));
                             }
+                            scores[i] -= deduction;
                             break;
                         }
                     }
@@ -548,7 +597,7 @@ public class GameScript : MonoBehaviour {
             return;
         }
         finalizeTimer = FINALIZE_TIMER_SECONDS;
-        botScript.Chat("The next round begins in " + Mathf.FloorToInt(FINALIZE_TIMER_SECONDS) + " seconds. Whisper me your word!", false);
+        botScript.Chat(string.Format("The next round begins in {0} seconds. What's the word between {1}? Whisper me your answer!", FINALIZE_TIMER_SECONDS, Util.JoinGrammatically(words[words.Count - 1].Select(s => s.ToUpper()).ToArray())), false);
         if (sfxCountdown.isPlaying) {
             sfxCountdown.Stop();
         }
@@ -731,7 +780,7 @@ public class GameScript : MonoBehaviour {
             doubledUpViewers.Remove(viewer);
             bool matched = false;
             for (int i = 0; i < newestWords.Length; i++) {
-                if (viewerWord == newestWords[i]) {
+                if (IsLemmaMatch(viewerWord, newestWords[i])) {
                     matched = true;
                     anyMatches = true;
                     scores[i] += points;
@@ -895,14 +944,49 @@ public class GameScript : MonoBehaviour {
         File.WriteAllLines(path, output.ToArray());
     }
 
-    string JoinGrammatically(string[] usernames) {
+    void LoadLemmas() {
+        string[] lineDelimiters = new string[] { " -> " };
+        char[] lemmaDelimiters = new char[] { '/' };
+        char[] formDelimiters = new char[] { ',' };
+        lemmaMatches = new HashSet<Tuple<string, string>>();
+        foreach (string line in Regex.Split(lemmas.text, "\n|\r|\r\n")) {
+            if (line.Length == 0 || line.StartsWith(";")) {
+                continue;
+            }
+            string[] tokens = line.Split(lineDelimiters, StringSplitOptions.None);
+            string lemma = tokens[0].Split(lemmaDelimiters)[0];
+            string[] forms = tokens[1].Split(formDelimiters);
+            // Insert every pair of lemma+form and form+form.
+            for (int i = 0; i < forms.Length; i++) {
+                for (int j = i + 1; j <= forms.Length; j++) {
+                    string one = WORD_REGEX.Replace(forms[i], "");
+                    string two = WORD_REGEX.Replace(j == forms.Length ? lemma : forms[j], "");
+                    int comparison = one.CompareTo(two);
+                    Debug.Assert(comparison != 0, string.Format("Identical lemma forms one line \"{0}\".", line));
+                    if (comparison < 0) {
+                        lemmaMatches.Add(new Tuple<string, string>(one, two));
+                    } else {
+                        lemmaMatches.Add(new Tuple<string, string>(two, one));
+                    }
+                }
+            }
+        }
+    }
+    bool IsLemmaMatch(string s1, string s2) {
+        if (s1 == s2) {
+            return true;
+        }
+        if (s1.CompareTo(s2) > 0) {
+            return IsLemmaMatch(s2, s1);
+        }
+        return lemmaMatches.Contains(new Tuple<string, string>(s1, s2));
+    }
+
+    string JoinUsernamesGrammatically(string[] usernames) {
         for (int i = 0; i < usernames.Length; i++) {
             usernames[i] = GetUsernameString(usernames[i]);
         }
-        if (usernames.Length > 1) {
-            usernames[usernames.Length - 1] = "and " + usernames[usernames.Length - 1];
-        }
-        return string.Join(usernames.Length < 3 ? " " : ", ", usernames);
+        return Util.JoinGrammatically(usernames);
     }
     string GetUsernameString(string username) {
         return subscribers.Contains(username) ? "<color=" + GameScript.SUB_COLOR_HEX_STRING + ">" + username + "</color>" : username;

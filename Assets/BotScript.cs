@@ -25,7 +25,6 @@ public class BotScript : MonoBehaviour {
     TwitchPubSub pubsub;
     TwitchAPI api;
 
-    Regex rgx = new Regex("[^a-z0-9]");
     public Dictionary<string, string> words;
     public Dictionary<string, string> adminCommands, viewerCommands;
     public List<Event> events;
@@ -131,7 +130,7 @@ public class BotScript : MonoBehaviour {
                 client.SendWhisper(e.WhisperMessage.Username, "One word only. No spaces allowed!");
             } else {
                 whisper = Util.RemoveDiacritics(whisper);
-                whisper = rgx.Replace(whisper, "");
+                whisper = GameScript.WORD_REGEX.Replace(whisper, "");
                 if (whisper.Length == 0) {
                     client.SendWhisper(e.WhisperMessage.Username, "Your word must contain alphabetic characters. (That means letters.)");
                 }
@@ -195,7 +194,7 @@ public class BotScript : MonoBehaviour {
             }
         } else if (e.RewardTitle == "Dock a Host's Points") {
             lock (events) {
-                events.Add(new Event(EventType.PUNISH, e.Login, e.Message));
+                events.Add(new Event(EventType.PUNISH, e.Login, e.Message, e.RewardPrompt.Contains('%').ToString()));
             }
         } else if (e.RewardTitle == "Demand a Recount") {
             lock (events) {

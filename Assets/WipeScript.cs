@@ -94,7 +94,7 @@ public class WipeScript : MonoBehaviour
                 namesSB.AppendLine(ordered[i].Key);
                 scoresSB.AppendLine(ordered[i].Value.ToString("N0"));
             }
-            totalTMP.text = string.Format("Total Viewer Score: {0}", totalScores.Values.Sum().ToString("N0"));
+            totalTMP.text = string.Format("{0} Leaderboard", System.DateTime.Now.ToString("MMMM"));
             namesTMP.text = namesSB.ToString();
             scoresTMP.text = scoresSB.ToString();
         }
