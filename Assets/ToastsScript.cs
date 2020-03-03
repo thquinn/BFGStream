@@ -9,6 +9,7 @@ public class ToastsScript : MonoBehaviour
     static int TIMER_FRAMES = 175;
 
     public GameObject toastPrefab;
+    public GameScript gameScript;
     public Sprite[] toastTypeIcons;
     public AudioSource sfxToast;
 
@@ -72,9 +73,17 @@ public class ToastsScript : MonoBehaviour
     public void Toast(ToastType type, string message) {
         queue.Enqueue(new ToastStruct(type, message));
     }
-    public void Dequeue() {
+    void Dequeue() {
         if (queue.Count == 0) {
             return;
+        }
+        if (gameScript.players.Count > 3) {
+            // In 4FG, the leftmost player's viewer popup can block the view of toasts. If it has two or more lines,
+            // wait until it goes away to start dequeueing toasts again.
+            GameObject viewerPopup = GameObject.FindGameObjectWithTag("ViewerPopup");
+            if (viewerPopup != null && viewerPopup.GetComponent<TextMeshProUGUI>().text.Split('\n').Length > 1) {
+                return;
+            }
         }
         timer = TIMER_FRAMES;
 

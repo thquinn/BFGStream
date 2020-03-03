@@ -19,12 +19,12 @@ they/841960 -> their,them,'em
 you/804279 -> your,ya,ye
 not/767330 -> n't
 she/653505 -> her
-do/535646 -> did,does,done,doing,du,d'
+do/535646 -> did,does,done,doing
 we/503360 -> our,us
-will/334612 -> 'll,wo
+will/334612 -> 'll
 say/317317 -> said,says,saying
 would/278414 -> 'd
-can/263138 -> ca,cans,could
+can/263138 -> cans,could
 go/227247 -> going,went,gone,goes,goin'
 get/212569 -> got,getting,gets,gotten
 make/209818 -> made,making,makes
@@ -64260,8 +64260,6 @@ beanie -> beanies
 beantown -> beantowns
 bearberry -> bearberries
 bearnaise -> bearnaises
-beatniks -> beatnikss
-beats -> beatss
 beaugregory -> beaugregories
 beaumontia -> beaumontias
 beauteousness -> beauteousnesses
@@ -84310,3 +84308,4 @@ zymase -> zymases
 zymolysis -> zymolyses
 zymosis -> zymoses
 zyrian -> zyrians
+dorito -> doritos

@@ -13,10 +13,10 @@ public class NewestWordScript : MonoBehaviour
     Vector3 originalPosition;
     float dy;
     public bool destroying = false;
-    bool win;
+    int winIndex, winCount;
     int frames;
 
-    public void Set(int player, int playerCount, string word, bool win) {
+    public void Set(int player, int playerCount, string word, int winIndex, int winCount) {
         rectTransform = (RectTransform)transform;
         TextMeshProUGUI tmp = GetComponent<TextMeshProUGUI>();
         bool simpleSwap = player == 1 && playerCount == 2;
@@ -35,7 +35,8 @@ public class NewestWordScript : MonoBehaviour
             rectTransform.sizeDelta = new Vector2(275, 80);
         }
         tmp.text = '"' + word.ToUpper() + '"';
-        this.win = win;
+        this.winIndex = winIndex;
+        this.winCount = winCount;
     }
 
     // Start is called before the first frame update
@@ -70,14 +71,15 @@ public class NewestWordScript : MonoBehaviour
             transform.localPosition = localPosition;
         }
 
-        if (!destroying && win && frames > winDelayFrames) {
+        if (!destroying && winIndex >= 0 && frames > winDelayFrames) {
             float t = Mathf.Clamp01((frames - winDelayFrames) / 60f);
             
             t = Util.EaseInOutQuad(t);
             originalPosition.z = centerPosition.z;
-            transform.localPosition = Vector3.Lerp(originalPosition, centerPosition, t);
+            float winYOffset = (winIndex * 2 - winCount + 1) / 2f * -145;
+            transform.localPosition = Vector3.Lerp(originalPosition, centerPosition + new Vector3(0, winYOffset, 0), t);
             transform.localScale = new Vector3(1 + 2 * t, 1 + 2 * t, 1);
-            rectTransform.sizeDelta = Vector2.Lerp(rectTransform.sizeDelta, new Vector2(550, 80), .002f);
+            rectTransform.sizeDelta = Vector2.Lerp(rectTransform.sizeDelta, new Vector2(550, 80), .006f);
         }
     }
 }

@@ -15,6 +15,9 @@ public class LockScript : MonoBehaviour
         this.on = on;
         timer = 0;
 
+        if (canvasGroup == null) {
+            canvasGroup = GetComponent<CanvasGroup>();
+        }
         canvasGroup.alpha = on ? 0 : 1;
         shackle.transform.localPosition = new Vector3(on ? shackleOffset : 0, 0, 0);
     }
@@ -22,7 +25,9 @@ public class LockScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        canvasGroup = GetComponent<CanvasGroup>();
+        if (canvasGroup == null) {
+            canvasGroup = GetComponent<CanvasGroup>();
+        }
         canvasGroup.alpha = 0;
         baseScale = transform.localScale.x;
         shackleOffset = shackle.transform.localPosition.x;

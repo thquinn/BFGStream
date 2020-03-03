@@ -99,4 +99,7 @@ public class WipeScript : MonoBehaviour
             scoresTMP.text = scoresSB.ToString();
         }
     }
+    public bool IsUp() {
+        return wipe.transform.localPosition.magnitude < 1;
+    }
 }

@@ -584,6 +584,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   toastPrefab: {fileID: 8444010991720290217, guid: 6bae803821d970946b20a0c9d68c5092,
     type: 3}
+  gameScript: {fileID: 1468223714}
   toastTypeIcons:
   - {fileID: 21300000, guid: a99a8c36abd74c748bb5c0006324d02f, type: 3}
   - {fileID: 21300000, guid: 3f063f11071748a43bd79d2e9d9e64ce, type: 3}
@@ -16570,6 +16571,8 @@ MonoBehaviour:
     type: 3}
   viewerPopupPrefab: {fileID: 5451858848297802842, guid: 0e26f579b61e7cd46889a1b14966ffc2,
     type: 3}
+  pointFloaterPrefab: {fileID: 9184987576507321373, guid: c06d42e29184cc74abfb784a793f814f,
+    type: 3}
   playerLabels2:
   - {fileID: 906786907}
   - {fileID: 862895840}
@@ -16621,8 +16624,14 @@ MonoBehaviour:
   sfxWin: {fileID: 241271539}
   sfxCountdown: {fileID: 241271540}
   lemmas: {fileID: 4900000, guid: 2f4d365f22bfde24d87c51e02dea8ae0, type: 3}
+  players:
+  - droolychen
+  - swarrizard
+  - thquinn
+  - willardjuice
   gameWon: 0
   finalizeTimer: 0
+  viewerPopupScripts: []
 --- !u!4 &1468223715
 Transform:
   m_ObjectHideFlags: 0

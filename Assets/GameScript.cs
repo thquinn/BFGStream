@@ -45,7 +45,7 @@ public class GameScript : MonoBehaviour {
     static readonly float FINALIZE_TIMER_SECONDS = 24;
     public static Color SUB_COLOR = new Color(1, 0.6471f, 0.7059f);
     public static string SUB_COLOR_HEX_STRING = "#" + ColorUtility.ToHtmlStringRGB(GameScript.SUB_COLOR);
-    public static int VIEWER_POPUP_COUNT = 8;
+    public static int BASE_VIEWER_POPUP_COUNT = 8;
     public static Regex WORD_REGEX = new Regex("[^a-z0-9]");
 
     public static Dictionary<string, string> viewerTitles = new Dictionary<string, string>();
@@ -57,7 +57,7 @@ public class GameScript : MonoBehaviour {
 
     public GameObject ui;
     // Bottom panel.
-    public GameObject newestWordPrefab, viewerPopupPrefab;
+    public GameObject newestWordPrefab, viewerPopupPrefab, pointFloaterPrefab;
     public TextMeshProUGUI[] playerLabels2, playerLabels4;
     public TextMeshProUGUI[] scoreLabels2, scoreLabels4;
     public LockScript[] lockScripts2, lockScripts4;
@@ -89,8 +89,8 @@ public class GameScript : MonoBehaviour {
     HashSet<Tuple<string, string>> lemmaMatches;
 
     // Game configuration.
-    string[] players = CONFIG["host_usernames"].Split(',');
-    string[] displayNames = CONFIG["host_display_names"].Split(',');
+    public List<string> players;
+    List<string> displayNames;
 
     List<string[]> words;
     string[] pendingWords;
@@ -105,11 +105,14 @@ public class GameScript : MonoBehaviour {
     bool[] pendingLastFrame;
     public bool gameWon;
     public float finalizeTimer;
-    ViewerPopupScript[] viewerPopupScripts;
+    public ViewerPopupScript[] viewerPopupScripts;
     bool freezeLeaderboard;
     int logFileSuffix;
 
     void Start() {
+        players = CONFIG["host_usernames"].Split(',').ToList();
+        displayNames = CONFIG["host_display_names"].Split(',').ToList();
+
         wordsPanel.transform.localPosition = new Vector3(1300, 470, 0);
         wordsTMP.text = "";
         countdownVolume = sfxCountdown.volume;
@@ -120,14 +123,14 @@ public class GameScript : MonoBehaviour {
             playerLabel.transform.parent.gameObject.SetActive(false);
         }
 
-        newestWordScripts = new NewestWordScript[players.Length];
+        newestWordScripts = new NewestWordScript[players.Count];
 
         words = new List<string[]>();
-        pendingWords = new string[players.Length];
+        pendingWords = new string[players.Count];
         viewerWords = new Dictionary<string, string>();
         lastViewerWords = new Dictionary<string, string>();
-        scores = new int[players.Length];
-        lastScores = new int[players.Length];
+        scores = new int[players.Count];
+        lastScores = new int[players.Count];
         viewerScores = new RollingScores(3600);
         doubledUpViewers = new HashSet<string>();
         lastDoubledUpViewers = new HashSet<string>();
@@ -135,8 +138,8 @@ public class GameScript : MonoBehaviour {
 		viewersMatchedToday = new HashSet<string>();
         viewersFollowedToday = new HashSet<string>();
         subscribers = new HashSet<string>();
-        pendingLastFrame = new bool[players.Length];
-        viewerPopupScripts = new ViewerPopupScript[players.Length];
+        pendingLastFrame = new bool[players.Count];
+        viewerPopupScripts = new ViewerPopupScript[players.Count];
         try {
             LoadScores();
         } catch (Exception e) {
@@ -149,21 +152,21 @@ public class GameScript : MonoBehaviour {
         float time = Time.time;
 
         // Update player UI references.
-        if (playerLabels == null || playerLabels.Length != players.Length) {
+        if (playerLabels == null || playerLabels.Length != players.Count) {
             if (playerLabels != null) {
                 foreach (TextMeshProUGUI playerLabel in playerLabels) {
                     playerLabel.transform.parent.gameObject.SetActive(false);
                 }
             }
-            if (players.Length == 2) {
+            if (players.Count == 2) {
                 playerLabels = playerLabels2;
                 scoreLabels = scoreLabels2;
                 lockScripts = lockScripts2;
-            } else if (players.Length == 3) {
+            } else if (players.Count == 3) {
                 playerLabels = new TextMeshProUGUI[] { playerLabels2[0], playerLabels4[2], playerLabels4[3] };
                 scoreLabels = new TextMeshProUGUI[] { scoreLabels2[0], scoreLabels4[2], scoreLabels4[3] };
                 lockScripts = new LockScript[] { lockScripts2[0], lockScripts4[2], lockScripts4[3] };
-            } else if (players.Length == 4) {
+            } else if (players.Count == 4) {
                 playerLabels = playerLabels4;
                 scoreLabels = scoreLabels4;
                 lockScripts = lockScripts4;
@@ -180,6 +183,9 @@ public class GameScript : MonoBehaviour {
                 }
                 playerLabels[i].transform.parent.GetChild(0).GetChild(0).GetComponent<SpriteRenderer>().sprite = avatar;
             }
+            for (int i = 0; i < lockScripts.Length; i++) {
+                lockScripts[i].Set(pendingWords[i] != null);
+            }
         }
 
         if (!freezeLeaderboard) {
@@ -191,6 +197,7 @@ public class GameScript : MonoBehaviour {
                 botScript.subscribers.Clear();
             }
         }
+
         // DEBUG DEBUG DEBUG
         if (Input.GetKeyDown(KeyCode.A)) {
             viewerScores.Award("user" + (viewerScores.NumViewers() + 1), 25 * UnityEngine.Random.Range(1, 11), time);
@@ -210,10 +217,10 @@ public class GameScript : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.Alpha2)) {
             pendingWords[1] = pendingWords[1] == null ? "sandwich" : null;
         }
-        if (Input.GetKeyDown(KeyCode.Alpha3) && players.Length >= 3) {
+        if (Input.GetKeyDown(KeyCode.Alpha3) && players.Count >= 3) {
             pendingWords[2] = pendingWords[2] == null ? "sandwich" : null;
         }
-        if (Input.GetKeyDown(KeyCode.Alpha4) && players.Length >= 4) {
+        if (Input.GetKeyDown(KeyCode.Alpha4) && players.Count >= 4) {
             pendingWords[3] = pendingWords[3] == null ? "sandwich" : null;
         }
         if (Input.GetKeyDown(KeyCode.Alpha5)) {
@@ -222,10 +229,10 @@ public class GameScript : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.Alpha6)) {
             pendingWords[1] = pendingWords[1] == null ? "hoagie" : null;
         }
-        if (Input.GetKeyDown(KeyCode.Alpha7) && players.Length >= 3) {
+        if (Input.GetKeyDown(KeyCode.Alpha7) && players.Count >= 3) {
             pendingWords[2] = pendingWords[2] == null ? "grinder" : null;
         }
-        if (Input.GetKeyDown(KeyCode.Alpha8) && players.Length >= 4) {
+        if (Input.GetKeyDown(KeyCode.Alpha8) && players.Count >= 4) {
             pendingWords[3] = pendingWords[3] == null ? "sub" : null;
         }
         if (Input.GetKeyDown(KeyCode.S)) {
@@ -238,10 +245,26 @@ public class GameScript : MonoBehaviour {
                 botScript.events.Add(new Event(EventType.BITS, "barbobarbo", "101", "Tom—you're the man!"));
             }
         }
-        if (Input.GetKeyDown(KeyCode.E)) {
-            viewerWords.Add("wurstwurstwurstwurst", "sandwich");
+        if (Input.GetKeyDown(KeyCode.N)) {
+            lock (botScript.events) {
+                botScript.events.Add(new Event(EventType.BITS, "barbobarbo", "420", "julie, Sam, Will, tom... you're all awesome!"));
+            }
         }
-
+        if (Input.GetKeyDown(KeyCode.M)) {
+            lock (botScript.events) {
+                botScript.events.Add(new Event(EventType.BITS, "barbobarbo", "69", "I love this game!"));
+            }
+        }
+        if (Input.GetKeyDown(KeyCode.Comma)) {
+            lock (botScript.events) {
+                botScript.events.Add(new Event(EventType.PUNISH, "barbobarbo", "Tom", "true"));
+            }
+        }
+        if (Input.GetKeyDown(KeyCode.E)) {
+            for (int i = 0; i < 10; i++) {
+                viewerWords.Add("wurstwurstwurstwurst" + i, "sandwich");
+            }
+        }
         // GUBED GUBED GUBED
 
         // Get inputs.
@@ -255,13 +278,16 @@ public class GameScript : MonoBehaviour {
             FinalizeRound();
         }
         if (Input.GetButtonDown("Toggle Wipe")) {
+            if (gameWon) {
+                NewGame();
+            }
             wipeScript.Toggle(viewerScores);
         }
         if (Input.GetButtonDown("New Game")) {
             NewGame();
         }
         if (Input.GetButtonDown("Claim Win")) {
-            ClaimWin(Enumerable.Range(0, players.Length).ToArray());
+            ClaimWin(Enumerable.Range(0, players.Count).ToArray());
         }
         if (Input.GetButtonDown("Restart Bot")) {
             DestroyImmediate(botScript.gameObject);
@@ -271,7 +297,7 @@ public class GameScript : MonoBehaviour {
         UpdateLeaderboard();
 
         // Update the bottom panel.
-        for (int i = 0; i < players.Length; i++) {
+        for (int i = 0; i < players.Count; i++) {
             int displayedScore = int.Parse(scoreLabels[i].text);
             int delta = scores[i] - displayedScore;
             if (Mathf.Abs(delta) < 10) {
@@ -356,7 +382,7 @@ public class GameScript : MonoBehaviour {
                         botScript.Whisper(kvp.Key, "That word has already been used during this game.");
                         continue;
                     }
-                    int playerIndex = Array.IndexOf(players, kvp.Key);
+                    int playerIndex = players.IndexOf(kvp.Key);
                     if (playerIndex == -1 && words.Count == 0) {
                         botScript.Whisper(kvp.Key, "The next game will start when the hosts pick their words.");
                         continue;
@@ -439,7 +465,7 @@ public class GameScript : MonoBehaviour {
                     for (int i = 0; i < indices.Length; i++) {
                         int index;
                         parseSuccess &= int.TryParse(tokens[i + 1], out index);
-                        if (!parseSuccess || index < 0 || index >= players.Length) {
+                        if (!parseSuccess || index < 0 || index >= players.Count) {
                             break;
                         }
                         indices[i] = index;
@@ -463,6 +489,44 @@ public class GameScript : MonoBehaviour {
                     }
                 } else if (kvp.Value.StartsWith("!t ")) {
                     GrantTitle(kvp.Key, kvp.Value);
+                } else if (kvp.Value.StartsWith("!ap ")) {
+                    if (words.Count > 0 || !wipeScript.IsUp()) {
+                        botScript.Whisper(kvp.Key, "This command can only be used in the nonesie round, with the fullscreen leaderboard up.");
+                        continue;
+                    }
+                    string[] tokens = kvp.Value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (tokens.Length != 4) {
+                        botScript.Whisper(kvp.Key, "Usage: !ap <index> <username> <displayname>");
+                        continue;
+                    }
+                    int index;
+                    if (!int.TryParse(tokens[1], out index) || index < 0 || index > players.Count) {
+                        botScript.Whisper(kvp.Key, "Error: Invalid index.");
+                    }
+                    players.Insert(index, tokens[2]);
+                    displayNames.Insert(index, tokens[3]);
+                    pendingWords = new string[players.Count];
+                } else if (kvp.Value.StartsWith("!rp ")) {
+                    if (players.Count == 2) {
+                        botScript.Whisper(kvp.Key, "You must have at least two players.");
+                        continue;
+                    }
+                    if (words.Count > 0 || !wipeScript.IsUp()) {
+                        botScript.Whisper(kvp.Key, "This command can only be used in the nonesie round, with the fullscreen leaderboard up.");
+                        continue;
+                    }
+                    string[] tokens = kvp.Value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (tokens.Length != 2) {
+                        botScript.Whisper(kvp.Key, "Usage: !rp <index>");
+                        continue;
+                    }
+                    int index;
+                    if (!int.TryParse(tokens[1], out index) || index < 0 || index >= players.Count) {
+                        botScript.Whisper(kvp.Key, "Error: Invalid index.");
+                    }
+                    players.RemoveAt(index);
+                    displayNames.RemoveAt(index);
+                    pendingWords = new string[players.Count];
                 }
             }
             botScript.adminCommands.Clear();
@@ -486,22 +550,36 @@ public class GameScript : MonoBehaviour {
                     int bits = int.Parse(e.info[1]);
                     string message = e.info[2].ToLower();
                     message = new Regex("[^a-z ]").Replace(message, " ");
-                    int playerIndex = -1;
+                    HashSet<int> matchingPlayerIndices = new HashSet<int>();
                     foreach (string token in message.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)) {
-                        for (int i = 0; i < displayNames.Length; i++) {
+                        for (int i = 0; i < displayNames.Count; i++) {
                             if (string.Equals(displayNames[i], token, StringComparison.OrdinalIgnoreCase)) {
-                                playerIndex = i;
-                                scores[playerIndex] += bits * 10;
-                                break;
+                                matchingPlayerIndices.Add(i);
                             }
                         }
                     }
+                    int pointAward = matchingPlayerIndices.Count == 0 ? 0 : Mathf.FloorToInt(bits * 10 / matchingPlayerIndices.Count);
+                    foreach (int matchingPlayerIndex in matchingPlayerIndices) {
+                        scores[matchingPlayerIndex] += pointAward;
+                        PointFloaterScript pointFloaterScript = Instantiate(pointFloaterPrefab, ui.transform).GetComponent<PointFloaterScript>();
+                        pointFloaterScript.Set(playerLabels[matchingPlayerIndex], PointFloaterIcon.BITS, pointAward);
+                    }
                     if (bits >= 50) {
-                        if (playerIndex == -1) {
-                            toastsScript.Toast(ToastType.BITS, string.Format("{0} cheered x{1}!", GetUsernameString(user), bits));
+                        string toastMessage;
+                        if (matchingPlayerIndices.Count == 0) {
+                            toastMessage = string.Format("{0} cheered {1} bits!", GetUsernameString(user), bits);
+                        } else if (matchingPlayerIndices.Count == 1) {
+                            toastMessage = string.Format("{0} cheered {1} bits for {2} — {2} gets {3} points!", GetUsernameString(user), bits, displayNames[matchingPlayerIndices.First()], pointAward);
                         } else {
-                            toastsScript.Toast(ToastType.BITS, string.Format("{0} cheered for {2} x{1}! {2} gets {3} points!", GetUsernameString(user), bits, displayNames[playerIndex], bits * 10));
+                            string[] matchingDisplayNames = matchingPlayerIndices.Select(i => displayNames[i]).ToArray();
+                            toastMessage = string.Format("{0} cheered {1} bits for {2} — they get {3} points each!", GetUsernameString(user), bits, Util.JoinGrammatically(matchingDisplayNames), pointAward);
                         }
+                        if (bits == 69) {
+                            toastMessage = toastMessage.Substring(0, toastMessage.Length - 1) + "... nice.";
+                        } else if (bits == 420) {
+                            toastMessage += " Blaze it!";
+                        }
+                        toastsScript.Toast(ToastType.BITS, toastMessage);
                     }
                 } else if (e.type == EventType.DOUBLE_UP) {
                     string user = e.info[0];
@@ -522,14 +600,16 @@ public class GameScript : MonoBehaviour {
                         continue;
                     }
                     string target = e.info[1].Trim();
-                    bool percentage = bool.Parse(e.info[2]);
-                    for (int i = 0; i < displayNames.Length; i++) {
+                    bool byPercentage = bool.Parse(e.info[2]);
+                    for (int i = 0; i < displayNames.Count; i++) {
                         if (string.Equals(displayNames[i], target, StringComparison.OrdinalIgnoreCase)) {
-                            int deduction = percentage ? Mathf.RoundToInt(scores[1] * .1f) : Mathf.Min(scores[i], 1000);
+                            int deduction = byPercentage ? Mathf.CeilToInt(scores[i] * .1f) : Mathf.Min(scores[i], 1000);
                             if (deduction == 0) {
                                 toastsScript.Toast(ToastType.PUNISH, string.Format("{0} tried to punish {1}... but there was nothing left to take!", GetUsernameString(user), displayNames[i]));
                             } else {
                                 toastsScript.Toast(ToastType.PUNISH, string.Format("{0} has punished {1}! \u2011{2} {3}!", GetUsernameString(user), displayNames[i], deduction, deduction == 1 ? "point" : "points"));
+                                PointFloaterScript pointFloaterScript = Instantiate(pointFloaterPrefab, ui.transform).GetComponent<PointFloaterScript>();
+                                pointFloaterScript.Set(playerLabels[i], PointFloaterIcon.PUNISH, -deduction);
                             }
                             scores[i] -= deduction;
                             break;
@@ -618,7 +698,7 @@ public class GameScript : MonoBehaviour {
         }
         words.Add(pendingWords);
         UpdateWords(claimed);
-        pendingWords = new string[players.Length];
+        pendingWords = new string[players.Count];
         lastViewerWords = viewerWords;
         viewerWords = new Dictionary<string, string>();
         try {
@@ -643,7 +723,7 @@ public class GameScript : MonoBehaviour {
         botScript.Spam();
     }
     void ClaimWin() {
-        ClaimWin(Enumerable.Range(0, players.Length).ToArray());
+        ClaimWin(Enumerable.Range(0, players.Count).ToArray());
     }
     void ClaimWin(int[] winnerIndices) {
         if (words.Count == 0) {
@@ -732,19 +812,18 @@ public class GameScript : MonoBehaviour {
             }
         }
         string[] newestWords = words[words.Count - 1];
-        // TODO: Add 2+2 win support.
-        HashSet<int> winners = new HashSet<int>();
+        Dictionary<string, List<int>> wordToPlayerIndex = new Dictionary<string, List<int>>();
         for (int i = 0; i < newestWords.Length; i++) {
-            for (int j = i + 1; j < newestWords.Length; j++) {
-                if (newestWords[i] == newestWords[j]) {
-                    winners.Add(i);
-                    winners.Add(j);
-                }
+            if (!wordToPlayerIndex.ContainsKey(newestWords[i])) {
+                wordToPlayerIndex.Add(newestWords[i], new List<int>());
             }
+            wordToPlayerIndex[newestWords[i]].Add(i);
         }
+        string[] winningWords = wordToPlayerIndex.Where(kvp => kvp.Value.Count > 1).Select(kvp => kvp.Key).ToArray();
         for (int i = 0; i < newestWordScripts.Length; i++) {
+            int winIndex = Array.IndexOf(winningWords, newestWords[i]);
             newestWordScripts[i] = Instantiate(newestWordPrefab, ui.transform).GetComponent<NewestWordScript>();
-            newestWordScripts[i].Set(i, players.Length, newestWords[i], winners.Contains(i));
+            newestWordScripts[i].Set(i, players.Count, newestWords[i], winIndex, winningWords.Length);
         }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < words.Count - 1; i++) {
@@ -760,11 +839,19 @@ public class GameScript : MonoBehaviour {
         }
         int points = GetPoints(words.Count - 1);
         for (int i = 0; i < viewerPopupScripts.Length; i++) {
+            if (viewerPopupScripts[i] != null) {
+                // Prevent old viewerPopupScripts from being found by ToastsScript.
+                viewerPopupScripts[i].tag = "Untagged";
+            }
             viewerPopupScripts[i] = Instantiate(viewerPopupPrefab, ui.transform).GetComponent<ViewerPopupScript>();
-            viewerPopupScripts[i].Set(i, players.Length);
+            viewerPopupScripts[i].Set(i, players.Count);
+            if (i != 0) {
+                // ToastsScript should only look at the first viewerpopup to see if there's room for toasts.
+                viewerPopupScripts[i].tag = "Untagged";
+            }
         }
 
-        int[] matchCounts = new int[players.Length];
+        int[] matchCounts = new int[players.Count];
         Dictionary<string, int> otherSubmissions = new Dictionary<string, int>();
         HashSet<string> subscriberSubmissions = new HashSet<string>();
         lastScores = (int[])scores.Clone();
@@ -774,6 +861,7 @@ public class GameScript : MonoBehaviour {
         string[] sortedViewers = viewerWords.Keys.OrderByDescending(v => subscribers.Contains(v))
                                                  .ThenByDescending(v => doubledUpViewers.Contains(v))
                                                  .ThenByDescending(v => viewerScores.GetScore(v)).ToArray();
+        int viewerPopupCount = BASE_VIEWER_POPUP_COUNT - 2 * winningWords.Length + 2;
         foreach (string viewer in sortedViewers) {
             string viewerWord = viewerWords[viewer];
             bool doubledUp = doubledUpViewers.Contains(viewer);
@@ -783,11 +871,11 @@ public class GameScript : MonoBehaviour {
                 if (IsLemmaMatch(viewerWord, newestWords[i])) {
                     matched = true;
                     anyMatches = true;
-                    scores[i] += points;
+                    scores[i] += points * (doubledUp ? 2 : 1);
                     viewerScores.Award(viewer, points * (doubledUp ? 2 : 1), time);
 
                     matchCounts[i]++;
-                    if (matchCounts[i] <= VIEWER_POPUP_COUNT) {
+                    if (matchCounts[i] <= viewerPopupCount) {
                         viewerPopupScripts[i].AddLine(GetUsernameString(viewer), points, viewerScores.GetScore(viewer), doubledUp);
                     }
                 }
@@ -825,8 +913,8 @@ public class GameScript : MonoBehaviour {
             }
         }
         for (int i = 0; i < matchCounts.Length; i++) {
-            if (matchCounts[i] > VIEWER_POPUP_COUNT) {
-                int over = matchCounts[i] - VIEWER_POPUP_COUNT;
+            if (matchCounts[i] > viewerPopupCount) {
+                int over = matchCounts[i] - viewerPopupCount;
                 viewerPopupScripts[i].AddLine(string.Format("...and {0} {1}!", over, over == 1 ? "other" : "others"));
             }
         }
@@ -866,11 +954,11 @@ public class GameScript : MonoBehaviour {
             botScript.WhisperAdmin("OTHER SUBMISSIONS: " + sb.ToString());
         }
         // Award the players points for matching with each other.
-        if (winners.Count > 0) {
+        if (winningWords.Length > 0) {
             gameWon = true;
             for (int i = 0; i < scores.Length; i++) {
-                if (winners.Contains(i)) {
-                    scores[i] += points * (winners.Count - 1);
+                if (winningWords.Contains(newestWords[i])) {
+                    scores[i] += points * (wordToPlayerIndex[newestWords[i]].Count - 1);
                 }
             }
             confetti.Play();
@@ -962,7 +1050,7 @@ public class GameScript : MonoBehaviour {
                     string one = WORD_REGEX.Replace(forms[i], "");
                     string two = WORD_REGEX.Replace(j == forms.Length ? lemma : forms[j], "");
                     int comparison = one.CompareTo(two);
-                    Debug.Assert(comparison != 0, string.Format("Identical lemma forms one line \"{0}\".", line));
+                    Debug.Assert(comparison != 0, string.Format("Identical lemma forms on line \"{0}\".", line));
                     if (comparison < 0) {
                         lemmaMatches.Add(new Tuple<string, string>(one, two));
                     } else {
