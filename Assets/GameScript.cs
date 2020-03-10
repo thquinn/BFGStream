@@ -43,6 +43,7 @@ public class GameScript : MonoBehaviour {
                                                           "Thirtsie", "Thirty-One Flavors", "Fat Thirty-Two" };
     static readonly int[] ROUND_POINTS = new int[] { 2000, 400, 300, 250, 225, 200, 180, 160, 150, 140, 130, 120, 110, 100, 90, 80, 70, 60, 50 };
     static readonly float FINALIZE_TIMER_SECONDS = 24;
+    static readonly float FINALIZE_TIMER_LIGHTNING_ROUND_SECONDS = 40;
     public static Color SUB_COLOR = new Color(1, 0.6471f, 0.7059f);
     public static string SUB_COLOR_HEX_STRING = "#" + ColorUtility.ToHtmlStringRGB(GameScript.SUB_COLOR);
     public static int BASE_VIEWER_POPUP_COUNT = 8;
@@ -82,7 +83,7 @@ public class GameScript : MonoBehaviour {
     // Particles.
     public ParticleSystem confetti, streamers;
     // Sound.
-    public AudioSource sfxLock, sfxWin, sfxCountdown;
+    public AudioSource sfxLock, sfxWin, sfxCountdown, sfxLightningIntro, sfxLightningLoop, sfxLightningWin;
     float countdownVolume;
     // Text resources.
     public TextAsset lemmas;
@@ -92,7 +93,7 @@ public class GameScript : MonoBehaviour {
     public List<string> players;
     List<string> displayNames;
 
-    List<string[]> words;
+    public List<string[]> words;
     string[] pendingWords;
     Dictionary<string, string> viewerWords, lastViewerWords;
     int[] scores, lastScores;
@@ -104,10 +105,12 @@ public class GameScript : MonoBehaviour {
     public HashSet<string> subscribers;
     bool[] pendingLastFrame;
     public bool gameWon;
+    bool finalizeTimerActive;
     public float finalizeTimer;
     public ViewerPopupScript[] viewerPopupScripts;
     bool freezeLeaderboard;
     int logFileSuffix;
+    public bool lightningRound;
 
     void Start() {
         players = CONFIG["host_usernames"].Split(',').ToList();
@@ -265,6 +268,7 @@ public class GameScript : MonoBehaviour {
                 viewerWords.Add("wurstwurstwurstwurst" + i, "sandwich");
             }
         }
+
         // GUBED GUBED GUBED
 
         // Get inputs.
@@ -274,8 +278,14 @@ public class GameScript : MonoBehaviour {
         if (spinnerOn) { // If the spinner is on, try to start the timer every frame until it works.
             StartTimer(false);
         }
+        if (lightningRound && words.Count > 0 && !finalizeTimerActive && !gameWon) {
+            StartTimer(false);
+        }
         if (Input.GetButtonDown("Finalize Round") || (words.Count == 0 && !pendingWords.Contains(null))) {
             FinalizeRound();
+        }
+        if (Input.GetButtonDown("Lightning Round") && words.Count == 0) {
+            lightningRound = true;
         }
         if (Input.GetButtonDown("Toggle Wipe")) {
             if (gameWon) {
@@ -312,6 +322,9 @@ public class GameScript : MonoBehaviour {
                 lockScripts[i].Set(!pendingLastFrame[i]);
                 playSFXLock |= pendingWords[i] != null;
             }
+            if (lightningRound && words.Count > 0) {
+                playSFXLock = false;
+            }
             if (playSFXLock) {
                 sfxLock.PlayOneShot(sfxLock.clip);
             }
@@ -335,18 +348,56 @@ public class GameScript : MonoBehaviour {
             viewersTMP.text = viewerWords.Count + (viewerWords.Count == 1 ? " viewer locked in" : " viewers locked in");
         }
         // Update the timer.
-        if (finalizeTimer > 0) {
-            timerGroup.alpha = Mathf.Lerp(timerGroup.alpha, 1, .2f);
+        bool allWordsSubmitted = true;
+        foreach (string pendingWord in pendingWords) {
+            if (pendingWord == null) {
+                allWordsSubmitted = false;
+                break;
+            }
+        }
+        if (finalizeTimerActive) {
+            if (finalizeTimer > 0) {
+                timerGroup.alpha = Mathf.Lerp(timerGroup.alpha, 1, .2f);
+            } else {
+                timerGroup.alpha = Mathf.Abs(finalizeTimer) % 1 > .5f ? 0 : 1;
+            }
             sfxCountdown.volume = Mathf.Min(sfxCountdown.volume + .0015f, countdownVolume);
             finalizeTimer -= Time.deltaTime;
-            if (finalizeTimer <= 0) {
+            if (finalizeTimer <= 0 && allWordsSubmitted) {
                 FinalizeRound();
             }
         } else {
             timerGroup.alpha = Mathf.Lerp(timerGroup.alpha, 0, .2f);
         }
-        int seconds = Mathf.CeilToInt(finalizeTimer);
+        int seconds = Mathf.CeilToInt(Mathf.Max(0, finalizeTimer));
         timerTMP.text = "00<voffset=0.125em>:</voffset>" + seconds.ToString("00");
+        // Lightning round penalty.
+        if (lightningRound && finalizeTimerActive && finalizeTimer <= 0) {
+            for (int i = 0; i < pendingWords.Length; i++) {
+                if (pendingWords[i] == null && scores[i] > 0) {
+                    // TODO: Make this not framerate dependent.
+                    scores[i]--;
+                }
+            }
+        }
+        // Lightning round music.
+        if (lightningRound && words.Count > 0 && !gameWon) {
+            if (!sfxLightningIntro.isPlaying && !sfxLightningLoop.isPlaying) {
+                sfxLightningIntro.volume = .4f;
+                sfxLightningLoop.volume = .4f;
+                sfxLightningIntro.Play();
+                sfxLightningLoop.PlayScheduled(AudioSettings.dspTime + sfxLightningIntro.clip.length);
+            }
+        } else if (sfxLightningIntro.isPlaying || sfxLightningLoop.isPlaying) {
+            if (sfxLightningIntro.volume > 0) {
+                sfxLightningIntro.volume -= .0066f;
+                sfxLightningLoop.volume -= .0066f;
+            } else {
+                sfxLightningIntro.Stop();
+                sfxLightningLoop.Stop();
+            }
+        }
+
         // Update the words panel.
         float wordsBannerTargetX, wordsTextsTargetX;
         if (wordsTMP.text.Length == 0) {
@@ -355,8 +406,9 @@ public class GameScript : MonoBehaviour {
         }
         else {
             float wordsWidth = wordsTMP.preferredWidth;
-            wordsBannerTargetX = -wordsWidth - 200;
-            wordsTextsTargetX = -wordsWidth / 2 - 405;
+            wordsWidth *= wordsTMP.fontSize / wordsTMP.fontSizeMax;
+            wordsBannerTargetX = -wordsWidth - 150;
+            wordsTextsTargetX = -wordsWidth / 2 - 375;
         }
         float wordsBannerX = Mathf.Lerp(wordsBanner.transform.localPosition.x, wordsBannerTargetX, .15f);
         wordsBanner.transform.localPosition = new Vector3(wordsBannerX, 0, 0);
@@ -666,25 +718,30 @@ public class GameScript : MonoBehaviour {
             FinalizeRound();
             return;
         }
-        for (int i = 0; i < pendingWords.Length; i++) {
-            if (pendingWords[i] == null) {
-                if (button && words.Count > 0) {
-                    spinnerOn = !spinnerOn;
+        if (!lightningRound) {
+            for (int i = 0; i < pendingWords.Length; i++) {
+                if (pendingWords[i] == null) {
+                    if (button && words.Count > 0) {
+                        spinnerOn = !spinnerOn;
+                    }
+                    return;
                 }
-                return;
             }
         }
         if (words.Count == 0) {
             FinalizeRound();
             return;
         }
-        finalizeTimer = FINALIZE_TIMER_SECONDS;
+        finalizeTimer = lightningRound ? FINALIZE_TIMER_LIGHTNING_ROUND_SECONDS : FINALIZE_TIMER_SECONDS;
+        finalizeTimerActive = true;
         botScript.Chat(string.Format("The next round begins in {0} seconds. What's the word between {1}? Whisper me your answer!", FINALIZE_TIMER_SECONDS, Util.JoinGrammatically(words[words.Count - 1].Select(s => s.ToUpper()).ToArray())), false);
         if (sfxCountdown.isPlaying) {
             sfxCountdown.Stop();
         }
-        sfxCountdown.volume = 0;
-        sfxCountdown.Play();
+        if (!lightningRound) {
+            sfxCountdown.volume = 0;
+            sfxCountdown.Play();
+        }
         spinnerOn = false;
     }
     void FinalizeRound(bool claimed = false) {
@@ -703,6 +760,7 @@ public class GameScript : MonoBehaviour {
         pendingWords = new string[players.Count];
         lastViewerWords = viewerWords;
         viewerWords = new Dictionary<string, string>();
+        finalizeTimerActive = false;
         try {
             SaveScores();
         } catch (Exception e) {
@@ -722,6 +780,7 @@ public class GameScript : MonoBehaviour {
             }
         }
         gameWon = false;
+        lightningRound = false;
         botScript.Spam();
     }
     void ClaimWin() {
@@ -965,7 +1024,11 @@ public class GameScript : MonoBehaviour {
             }
             confetti.Play();
             streamers.Play();
-            sfxWin.PlayDelayed(1);
+            if (lightningRound) {
+                sfxLightningWin.PlayDelayed(1.25f);
+            } else {
+                sfxWin.PlayDelayed(1);
+            }
         }
     }
 

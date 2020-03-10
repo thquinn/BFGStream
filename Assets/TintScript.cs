@@ -9,10 +9,11 @@ public class TintScript : MonoBehaviour
 {
     static Tuple<Color, Color> COLORS_LIGHT = new Tuple<Color, Color>(new Color(0.8705882f, 0.8313726f, 0.9137255f), new Color(0.9215686f, 0.8352941f, 0.8352941f)),
                                COLORS_MID = new Tuple<Color, Color>(new Color(0.5686275f, 0.4705882f, 0.7176471f), new Color(0.7215686f, 0.4745098f, 0.4745098f)),
-                               COLORS_DARK = new Tuple<Color, Color>(new Color(0.3921569f, 0.2666667f, 0.6078432f), new Color(0.6117647f, 0.2666667f, 0.2666667f)),
+                               COLORS_DARK = new Tuple<Color, Color>(new Color(0.3921569f, 0.2666667f, 0.6078432f), new Color(0.6698113f, 0.1548149f, 0.1548149f)),
                                COLORS_LOGO = new Tuple<Color, Color>(new Color(0.8077272f, 0.7134212f, 0.9056604f), new Color(0.9098039f, 0.7176471f, 0.7176471f));
     static float SPEED = .01f;
 
+    public GameScript gameScript;
     public WipeScript wipeScript;
 
     public ParticleSystem[] gradientParticles, darkParticles;
@@ -31,9 +32,7 @@ public class TintScript : MonoBehaviour
     }
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.C)) {
-            target = target == 0 ? 1 : 0;
-        }
+        target = (gameScript.lightningRound && gameScript.words.Count > 0) ? 1 : 0;
         float modifiedTarget = wipeScript.on ? 0 : target;
         if (t == modifiedTarget) {
             return;
