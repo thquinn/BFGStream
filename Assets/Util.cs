@@ -29,6 +29,10 @@ public class Util {
         }
         return string.Join(strings.Length < 3 ? " " : ", ", strings);
     }
+    public static string SanitizeWord(string word) {
+        word = Util.RemoveDiacritics(word.ToLower());
+        return GameScript.WORD_REGEX.Replace(word, "");
+    }
     public static string RemoveDiacritics(string text) {
         if (string.IsNullOrWhiteSpace(text))
             return text;

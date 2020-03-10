@@ -129,8 +129,7 @@ public class BotScript : MonoBehaviour {
             } else if (whisper.Contains(" ")) {
                 client.SendWhisper(e.WhisperMessage.Username, "One word only. No spaces allowed!");
             } else {
-                whisper = Util.RemoveDiacritics(whisper);
-                whisper = GameScript.WORD_REGEX.Replace(whisper, "");
+                whisper = Util.SanitizeWord(whisper);
                 if (whisper.Length == 0) {
                     client.SendWhisper(e.WhisperMessage.Username, "Your word must contain alphabetic characters. (That means letters.)");
                 }

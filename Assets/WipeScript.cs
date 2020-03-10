@@ -72,17 +72,16 @@ public class WipeScript : MonoBehaviour
                     { "cragsquad", 180535 },
                     { "jjiaa", 171169 },
                     { "supersonik319", 130005 },
-                    { "syathenurin", 102220 },
                     { "anniexchen", 80333 },
                     { "korenji321", 79800 },
                     { "swarrizard", 55055 },
-                    { "droolychen", Random.Range(1000, 40000) },
-                    { "this_is_a_bug_if_visible", 666 },
+                    { "droolychen", Random.Range(1, 400000) },
+                    { "this_is_a_bug_if_visible", 0 },
                 };
             } else {
                 totalScores = scores.GetTotalScores();
             }
-            var ordered = totalScores.OrderByDescending(kvp => kvp.Value).ToArray();
+            var ordered = totalScores.Where(kvp => kvp.Value > 0).OrderByDescending(kvp => kvp.Value).ToArray();
             StringBuilder namesSB = new StringBuilder(), scoresSB = new StringBuilder();
             namesSB.Append("<size=45pt>");
             scoresSB.Append("<size=45pt>");

@@ -79,7 +79,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4293580255
-  m_fontColor: {r: 0.8745098, g: 0.8352941, b: 0.91764706, a: 1}
+  m_fontColor: {r: 0.8705882, g: 0.8313726, b: 0.9137255, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -187,6 +187,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   canvasGroup: {fileID: 9184987576507321361}
   tmp: {fileID: 9184987576507321375}
+  iconColor: {r: 0.8705882, g: 0.8313726, b: 0.9137255, a: 1}
 --- !u!1 &9184987576866938854
 GameObject:
   m_ObjectHideFlags: 0

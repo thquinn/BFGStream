@@ -55,7 +55,7 @@ public class GameScript : MonoBehaviour {
     public BotScript botScript;
     public ToastsScript toastsScript;
 
-    public GameObject ui;
+    public GameObject ui, viewerPopups, pointFloaters;
     // Bottom panel.
     public GameObject newestWordPrefab, viewerPopupPrefab, pointFloaterPrefab;
     public TextMeshProUGUI[] playerLabels2, playerLabels4;
@@ -434,7 +434,7 @@ public class GameScript : MonoBehaviour {
                     if (tokens.Length != 3 || !int.TryParse(tokens[2], out points)) {
                         botScript.Whisper(kvp.Key, "Usage: !p <word> <points>");
                     }
-                    string word = tokens[1].ToLower();
+                    string word = Util.SanitizeWord(tokens[1]);
                     List<string> awardedViewers = new List<string>();
                     foreach (var wkvp in lastViewerWords) {
                         if (wkvp.Value == word) {
@@ -561,8 +561,7 @@ public class GameScript : MonoBehaviour {
                     int pointAward = matchingPlayerIndices.Count == 0 ? 0 : Mathf.FloorToInt(bits * 10 / matchingPlayerIndices.Count);
                     foreach (int matchingPlayerIndex in matchingPlayerIndices) {
                         scores[matchingPlayerIndex] += pointAward;
-                        PointFloaterScript pointFloaterScript = Instantiate(pointFloaterPrefab, ui.transform).GetComponent<PointFloaterScript>();
-                        pointFloaterScript.Set(playerLabels[matchingPlayerIndex], PointFloaterIcon.BITS, pointAward);
+                        CreatePointFloater(matchingPlayerIndex, PointFloaterIcon.BITS, pointAward);
                     }
                     if (bits >= 50) {
                         string toastMessage;
@@ -608,8 +607,7 @@ public class GameScript : MonoBehaviour {
                                 toastsScript.Toast(ToastType.PUNISH, string.Format("{0} tried to punish {1}... but there was nothing left to take!", GetUsernameString(user), displayNames[i]));
                             } else {
                                 toastsScript.Toast(ToastType.PUNISH, string.Format("{0} has punished {1}! \u2011{2} {3}!", GetUsernameString(user), displayNames[i], deduction, deduction == 1 ? "point" : "points"));
-                                PointFloaterScript pointFloaterScript = Instantiate(pointFloaterPrefab, ui.transform).GetComponent<PointFloaterScript>();
-                                pointFloaterScript.Set(playerLabels[i], PointFloaterIcon.PUNISH, -deduction);
+                                CreatePointFloater(i, PointFloaterIcon.PUNISH, -deduction);
                             }
                             scores[i] -= deduction;
                             break;
@@ -652,6 +650,10 @@ public class GameScript : MonoBehaviour {
             }
             botScript.events.Clear();
         }
+    }
+    void CreatePointFloater(int playerIndex, PointFloaterIcon icon, int points) {
+        PointFloaterScript pointFloaterScript = Instantiate(pointFloaterPrefab, pointFloaters.transform).GetComponent<PointFloaterScript>();
+        pointFloaterScript.Set(playerLabels[playerIndex], icon, points);
     }
     // Commands.
     void StartTimer(bool button) {
@@ -843,7 +845,7 @@ public class GameScript : MonoBehaviour {
                 // Prevent old viewerPopupScripts from being found by ToastsScript.
                 viewerPopupScripts[i].tag = "Untagged";
             }
-            viewerPopupScripts[i] = Instantiate(viewerPopupPrefab, ui.transform).GetComponent<ViewerPopupScript>();
+            viewerPopupScripts[i] = Instantiate(viewerPopupPrefab, viewerPopups.transform).GetComponent<ViewerPopupScript>();
             viewerPopupScripts[i].Set(i, players.Count);
             if (i != 0) {
                 // ToastsScript should only look at the first viewerpopup to see if there's room for toasts.

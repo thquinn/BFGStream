@@ -15,8 +15,9 @@ public class PointFloaterScript : MonoBehaviour
         transform.position = playerLabel.gameObject.transform.position;
         rectTransform.sizeDelta = playerLabel.rectTransform.sizeDelta;
         tmp.alignment = playerLabel.alignment;
+        tmp.margin = playerLabel.margin;
         string amountText = amount > 0 ? "+" + amount : amount.ToString();
-        tmp.text = string.Format("<size=70%><sprite index={0} color=#DFD5EA></size> {1}", (int)icon, amountText);
+        tmp.text = string.Format("<size=70%><sprite index={0} color=#{1}></size> {2}", (int)icon, ColorUtility.ToHtmlStringRGB(tmp.color), amountText);
     }
 
     // Update is called once per frame
