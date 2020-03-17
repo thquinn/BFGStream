@@ -17089,7 +17089,7 @@ MonoBehaviour:
   sfxLightningLoop: {fileID: 241271542}
   sfxLightningWin: {fileID: 241271544}
   lemmas: {fileID: 4900000, guid: 2f4d365f22bfde24d87c51e02dea8ae0, type: 3}
-  dictionaryAsset: {fileID: 4900000, guid: 42f81078fdc9a8d48a57342a6860317e, type: 3}
+  dictionaryAsset: {fileID: 4900000, guid: 5ce65e78f9e9ecc429af6620c98f5b57, type: 3}
   players:
   - droolychen
   - swarrizard
