@@ -40,6 +40,7 @@ public class ToastsScript : MonoBehaviour
         if (toasts.Count == 0) {
             return;
         }
+        // Note: this can cause very tall toasts to despawn as soon as they're instantiated.
         float y = (spriteRenderers[0].size.y - 1) * 25f;
         int deadIndex = -1;
         for (int i = 0; i < toasts.Count; i++) {
@@ -136,4 +137,5 @@ public enum ToastType : int {
     DOUBLE_UP = 11,
     PUNISH = 12,
     GIFT = 13,
+    DICTIONARY = 14,
 }

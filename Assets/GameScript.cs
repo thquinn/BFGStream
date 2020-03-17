@@ -1,4 +1,5 @@
 ﻿using Assets;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -86,8 +87,9 @@ public class GameScript : MonoBehaviour {
     public AudioSource sfxLock, sfxWin, sfxCountdown, sfxLightningIntro, sfxLightningLoop, sfxLightningWin;
     float countdownVolume;
     // Text resources.
-    public TextAsset lemmas;
+    public TextAsset lemmas, dictionaryAsset;
     HashSet<Tuple<string, string>> lemmaMatches;
+    Dictionary<string, string> dictionaryDefinitions;
 
     // Game configuration.
     public List<string> players;
@@ -149,6 +151,7 @@ public class GameScript : MonoBehaviour {
             Debug.Log(string.Format("Loading viewer scores failed: {0}", e));
         }
         LoadLemmas(); // TODO: Once this is tested, disable in the editor.
+        LoadDictionary();
     }
 
     void Update() {
@@ -264,11 +267,10 @@ public class GameScript : MonoBehaviour {
             }
         }
         if (Input.GetKeyDown(KeyCode.E)) {
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 8; i++) {
                 viewerWords.Add("wurstwurstwurstwurst" + i, "sandwich");
             }
         }
-
         // GUBED GUBED GUBED
 
         // Get inputs.
@@ -296,8 +298,8 @@ public class GameScript : MonoBehaviour {
         if (Input.GetButtonDown("New Game")) {
             NewGame();
         }
-        if (Input.GetButtonDown("Claim Win")) {
-            ClaimWin(Enumerable.Range(0, players.Count).ToArray());
+        if (Input.GetButtonDown("Claim Win") && players.Count == 2) {
+            ClaimWin();
         }
         if (Input.GetButtonDown("Restart Bot")) {
             DestroyImmediate(botScript.gameObject);
@@ -579,6 +581,19 @@ public class GameScript : MonoBehaviour {
                     players.RemoveAt(index);
                     displayNames.RemoveAt(index);
                     pendingWords = new string[players.Count];
+                } else if (kvp.Value.StartsWith("!d ")) {
+                    string[] tokens = kvp.Value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (tokens.Length != 2) {
+                        botScript.Whisper(kvp.Key, "Usage: !d <word to define>");
+                        continue;
+                    }
+                    string word = tokens[1];
+                    string definition = GetDictionaryDefinition(word);
+                    if (definition == null) {
+                        botScript.Whisper(kvp.Key, "Couldn't find a definition for that word.");
+                        continue;
+                    }
+                    toastsScript.Toast(ToastType.DICTIONARY, string.Format("{0}\n{1}", word.ToUpper(), definition));
                 }
             }
             botScript.adminCommands.Clear();
@@ -709,7 +724,7 @@ public class GameScript : MonoBehaviour {
     }
     // Commands.
     void StartTimer(bool button) {
-        if (finalizeTimer > 0) {
+        if (finalizeTimerActive) {
             finalizeTimer = .01f;
             sfxCountdown.Stop();
             return;
@@ -734,7 +749,7 @@ public class GameScript : MonoBehaviour {
         }
         finalizeTimer = lightningRound ? FINALIZE_TIMER_LIGHTNING_ROUND_SECONDS : FINALIZE_TIMER_SECONDS;
         finalizeTimerActive = true;
-        botScript.Chat(string.Format("The next round begins in {0} seconds. What's the word between {1}? Whisper me your answer!", FINALIZE_TIMER_SECONDS, Util.JoinGrammatically(words[words.Count - 1].Select(s => s.ToUpper()).ToArray())), false);
+        botScript.Chat(string.Format("The next round begins in {0} seconds. What's the word between {1}? Whisper me your answer!", lightningRound ? FINALIZE_TIMER_LIGHTNING_ROUND_SECONDS : FINALIZE_TIMER_SECONDS, Util.JoinGrammatically(words[words.Count - 1].Select(s => s.ToUpper()).ToArray())), false);
         if (sfxCountdown.isPlaying) {
             sfxCountdown.Stop();
         }
@@ -936,7 +951,7 @@ public class GameScript : MonoBehaviour {
                     viewerScores.Award(viewer, points * (doubledUp ? 2 : 1), time);
 
                     matchCounts[i]++;
-                    if (matchCounts[i] <= viewerPopupCount) {
+                    if (matchCounts[i] <= viewerPopupCount + 1) {
                         viewerPopupScripts[i].AddLine(GetUsernameString(viewer), points, viewerScores.GetScore(viewer), doubledUp);
                     }
                 }
@@ -974,10 +989,14 @@ public class GameScript : MonoBehaviour {
             }
         }
         for (int i = 0; i < matchCounts.Length; i++) {
-            if (matchCounts[i] > viewerPopupCount) {
+            if (matchCounts[i] > viewerPopupCount + 1) {
                 int over = matchCounts[i] - viewerPopupCount;
+                viewerPopupScripts[i].RemoveLastLine();
                 viewerPopupScripts[i].AddLine(string.Format("...and {0} {1}!", over, over == 1 ? "other" : "others"));
             }
+        }
+        foreach (ViewerPopupScript viewerPopupScript in viewerPopupScripts) {
+            viewerPopupScript.FinalizeLines();
         }
         if (words.Count > 1 && viewerWords.Count > 0 && !anyMatches && !claimed) {
             toastsScript.Toast(ToastType.ALL_MISS, string.Format("No one matched with the hosts..."));
@@ -1133,6 +1152,18 @@ public class GameScript : MonoBehaviour {
             return IsLemmaMatch(s2, s1);
         }
         return lemmaMatches.Contains(new Tuple<string, string>(s1, s2));
+    }
+
+    void LoadDictionary() {
+        dictionaryDefinitions = new Dictionary<string, string>();
+        //dictionaryDefinitions = JsonConvert.DeserializeObject<Dictionary<string, string>>(dictionaryAsset.text);
+    }
+    string GetDictionaryDefinition(string word) {
+        word = word.ToUpper();
+        if (dictionaryDefinitions.ContainsKey(word)) {
+            return dictionaryDefinitions[word];
+        }
+        return null;
     }
 
     string JoinUsernamesGrammatically(string[] usernames) {

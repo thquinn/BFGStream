@@ -65,23 +65,20 @@ public class ViewerPopupScript : MonoBehaviour
         }
         transform.localPosition = localPosition;
     }
+    List<string> lines = new List<string>();
     public void AddLine(string line) {
-        if (tmp == null) {
-            tmp = GetComponent<TextMeshProUGUI>();
-        }
-        if (tmp.text.Length != 0) {
-            tmp.text += '\n';
-        }
-        tmp.text += line;
+        lines.Add(line);
     }
     public void AddLine(string username, int points, int total, bool doubledUp) {
-        if (tmp == null) {
-            tmp = GetComponent<TextMeshProUGUI>();
+        lines.Add(string.Format("{0} +{1} pts{2} <size=75%><voffset=0.15em>►</voffset></size> {3}", username, points, doubledUp ? " (x2!)" : "", total));
+    }
+    public void RemoveLastLine() {
+        if (lines.Count > 0) {
+            lines.RemoveAt(lines.Count - 1);
         }
-        if (tmp.text.Length != 0) {
-            tmp.text += '\n';
-        }
-        tmp.text += string.Format("{0} +{1} pts{2} <size=75%><voffset=0.15em>►</voffset></size> {3}", username, points, doubledUp ? " (x2!)" : "", total);
+    }
+    public void FinalizeLines() {
+        GetComponent<TextMeshProUGUI>().text = string.Join("\n", lines);
     }
     public void ForceDestroy() {
         timer = 1200;

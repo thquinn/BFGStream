@@ -635,6 +635,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: b4d18b4d96ae06c428cd29b809d5515c, type: 3}
   - {fileID: 21300000, guid: ca0a9bbfaa68ff743b2406adc450c7f1, type: 3}
   - {fileID: 21300000, guid: 28e0788ac0ccc6f48bdb600b12733f8c, type: 3}
+  - {fileID: 21300000, guid: 6ee4cd9401d0d224ea265704b97d9bba, type: 3}
   sfxToast: {fileID: 241271541}
 --- !u!1 &84787606
 GameObject:
@@ -17088,6 +17089,7 @@ MonoBehaviour:
   sfxLightningLoop: {fileID: 241271542}
   sfxLightningWin: {fileID: 241271544}
   lemmas: {fileID: 4900000, guid: 2f4d365f22bfde24d87c51e02dea8ae0, type: 3}
+  dictionaryAsset: {fileID: 4900000, guid: 42f81078fdc9a8d48a57342a6860317e, type: 3}
   players:
   - droolychen
   - swarrizard
