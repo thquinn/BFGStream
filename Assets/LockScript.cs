@@ -7,11 +7,15 @@ public class LockScript : MonoBehaviour
     CanvasGroup canvasGroup;
     public GameObject shackle;
 
+    bool started;
     bool on = false;
     float baseScale, shackleOffset;
     int timer;
 
     public void Set(bool on) {
+        if (!started) {
+            return;
+        }
         this.on = on;
         timer = 0;
 
@@ -25,6 +29,7 @@ public class LockScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        started = true;
         if (canvasGroup == null) {
             canvasGroup = GetComponent<CanvasGroup>();
         }

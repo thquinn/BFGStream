@@ -263,7 +263,12 @@ public class GameScript : MonoBehaviour {
         }
         if (Input.GetKeyDown(KeyCode.Comma)) {
             lock (botScript.events) {
-                botScript.events.Add(new Event(EventType.PUNISH, "barbobarbo", "Tom", "true"));
+                botScript.events.Add(new Event(EventType.PUNISH, "barbobarbo", "Tom and Will", "true"));
+            }
+        }
+        if (Input.GetKeyDown(KeyCode.D)) {
+            lock (botScript.events) {
+                botScript.events.Add(new Event(EventType.DOUBLE_UP, "wurstwurstwurstwurst7"));
             }
         }
         if (Input.GetKeyDown(KeyCode.E)) {
@@ -392,8 +397,8 @@ public class GameScript : MonoBehaviour {
             }
         } else if (sfxLightningIntro.isPlaying || sfxLightningLoop.isPlaying) {
             if (sfxLightningIntro.volume > 0) {
-                sfxLightningIntro.volume -= .0066f;
-                sfxLightningLoop.volume -= .0066f;
+                sfxLightningIntro.volume -= .005f;
+                sfxLightningLoop.volume -= .005f;
             } else {
                 sfxLightningIntro.Stop();
                 sfxLightningLoop.Stop();
@@ -497,7 +502,7 @@ public class GameScript : MonoBehaviour {
                         }
                     }
                     if (awardedViewers.Count > 0) {
-                        awardedViewers = awardedViewers.OrderByDescending(v => subscribers.Contains(v)).ToList();
+                        awardedViewers = awardedViewers.OrderByDescending(v => lastDoubledUpViewers.Contains(v)).ThenByDescending(v => subscribers.Contains(v)).ToList();
                         if (awardedViewers.Count > 4) {
                             int trunc = awardedViewers.Count - 3;
                             awardedViewers.RemoveRange(3, awardedViewers.Count - 3);
@@ -505,7 +510,7 @@ public class GameScript : MonoBehaviour {
                         }
                         viewerScores.FinalizeScores();
                         if (points != 0) {
-                            toastsScript.Toast(ToastType.AWARD, string.Format("{0} {1} awarded {2} {3} for submitting \"{4}\"!", JoinUsernamesGrammatically(awardedViewers.ToArray()), awardedViewers.Count == 1 ? "was" : "were", points, points == 1 ? "point" : "points", word.ToUpper()));
+                            toastsScript.Toast(ToastType.AWARD, string.Format("{0} {1} awarded {2} {3} for submitting \"{4}\"!", JoinAwardeesGrammatically(awardedViewers.ToArray()), awardedViewers.Count == 1 ? "was" : "were", points, points == 1 ? "point" : "points", word.ToUpper()));
                         }
                     }
                 } else if (kvp.Value.StartsWith("!w ")) {
@@ -615,16 +620,8 @@ public class GameScript : MonoBehaviour {
                 if (e.type == EventType.BITS) {
                     string user = e.info[0];
                     int bits = int.Parse(e.info[1]);
-                    string message = e.info[2].ToLower();
-                    message = new Regex("[^a-z ]").Replace(message, " ");
-                    HashSet<int> matchingPlayerIndices = new HashSet<int>();
-                    foreach (string token in message.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)) {
-                        for (int i = 0; i < displayNames.Count; i++) {
-                            if (string.Equals(displayNames[i], token, StringComparison.OrdinalIgnoreCase)) {
-                                matchingPlayerIndices.Add(i);
-                            }
-                        }
-                    }
+                    string message = e.info[2];
+                    HashSet<int> matchingPlayerIndices = GetMatchingPlayerIndices(message);
                     int pointAward = matchingPlayerIndices.Count == 0 ? 0 : Mathf.FloorToInt(bits * 10 / matchingPlayerIndices.Count);
                     foreach (int matchingPlayerIndex in matchingPlayerIndices) {
                         scores[matchingPlayerIndex] += pointAward;
@@ -665,20 +662,18 @@ public class GameScript : MonoBehaviour {
                     if (players.Contains(user)) {
                         continue;
                     }
-                    string target = e.info[1].Trim();
+                    string message = e.info[1];
                     bool byPercentage = bool.Parse(e.info[2]);
-                    for (int i = 0; i < displayNames.Count; i++) {
-                        if (string.Equals(displayNames[i], target, StringComparison.OrdinalIgnoreCase)) {
-                            int deduction = byPercentage ? Mathf.CeilToInt(scores[i] * .1f) : Mathf.Min(scores[i], 1000);
-                            if (deduction == 0) {
-                                toastsScript.Toast(ToastType.PUNISH, string.Format("{0} tried to punish {1}... but there was nothing left to take!", GetUsernameString(user), displayNames[i]));
-                            } else {
-                                toastsScript.Toast(ToastType.PUNISH, string.Format("{0} has punished {1}! \u2011{2} {3}!", GetUsernameString(user), displayNames[i], deduction, deduction == 1 ? "point" : "points"));
-                                CreatePointFloater(i, PointFloaterIcon.PUNISH, -deduction);
-                            }
-                            scores[i] -= deduction;
-                            break;
+                    HashSet<int> matchingPlayerIndices = GetMatchingPlayerIndices(message);
+                    foreach (int i in matchingPlayerIndices) {
+                        int deduction = byPercentage ? Mathf.CeilToInt(scores[i] * .1f / matchingPlayerIndices.Count) : Mathf.Min(scores[i], 1000 / matchingPlayerIndices.Count);
+                        if (deduction == 0) {
+                            toastsScript.Toast(ToastType.PUNISH, string.Format("{0} tried to punish {1}... but there was nothing left to take!", GetUsernameString(user), displayNames[i]));
+                        } else {
+                            toastsScript.Toast(ToastType.PUNISH, string.Format("{0} has punished {1}! \u2011{2} {3}!", GetUsernameString(user), displayNames[i], deduction, deduction == 1 ? "point" : "points"));
+                            CreatePointFloater(i, PointFloaterIcon.PUNISH, -deduction);
                         }
+                        scores[i] -= deduction;
                     }
                 } else if (e.type == EventType.RECOUNT) {
                     string user = e.info[0];
@@ -724,7 +719,7 @@ public class GameScript : MonoBehaviour {
     }
     // Commands.
     void StartTimer(bool button) {
-        if (finalizeTimerActive) {
+        if (finalizeTimerActive && Application.isEditor) {
             finalizeTimer = .01f;
             sfxCountdown.Stop();
             return;
@@ -796,6 +791,8 @@ public class GameScript : MonoBehaviour {
         }
         gameWon = false;
         lightningRound = false;
+        finalizeTimer= 0;
+        finalizeTimerActive = false;
         botScript.Spam();
     }
     void ClaimWin() {
@@ -1166,13 +1163,26 @@ public class GameScript : MonoBehaviour {
         return null;
     }
 
-    string JoinUsernamesGrammatically(string[] usernames) {
+    string JoinAwardeesGrammatically(string[] usernames) {
         for (int i = 0; i < usernames.Length; i++) {
-            usernames[i] = GetUsernameString(usernames[i]);
+            usernames[i] = lastDoubledUpViewers.Contains(usernames[i]) ? GetUsernameString(usernames[i]) + " (x2!)" : GetUsernameString(usernames[i]);
         }
         return Util.JoinGrammatically(usernames);
     }
     string GetUsernameString(string username) {
         return subscribers.Contains(username) ? "<color=" + GameScript.SUB_COLOR_HEX_STRING + ">" + username + "</color>" : username;
+    }
+
+    HashSet<int> GetMatchingPlayerIndices(string message) {
+        message = new Regex("[^a-z ]").Replace(message.ToLower(), " ");
+        HashSet<int> matchingPlayerIndices = new HashSet<int>();
+        foreach (string token in message.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)) {
+            for (int i = 0; i < displayNames.Count; i++) {
+                if (string.Equals(displayNames[i], token, StringComparison.OrdinalIgnoreCase)) {
+                    matchingPlayerIndices.Add(i);
+                }
+            }
+        }
+        return matchingPlayerIndices;
     }
 }

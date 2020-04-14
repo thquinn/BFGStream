@@ -15,7 +15,7 @@ As promised to a tenacious viewer, here's the Unity project for my weekly stream
 
 **IMPORTANT:** Before you can run this project, you have to make your own "Assets/StreamingAssets/config.ini" file that provides all the Twitch OAuth keys for the bot account and user account that it uses, plus a Twitch API application ID, plus information about who to treat as hosts. Use the config_example.ini file in that directory to guide you.
 
-I'll probably be adding new features for a while to come. There's plenty of janky stuff going on, so imitate at your own peril... but I do suggest you tune and watch! It's every Tuesday from 8 PM to 11 PM Eastern. [My Twitch channel is here,](https://www.twitch.tv/thquinn) and all the recorded streams are on [my YouTube channel here.](https://www.youtube.com/playlist?list=PLrM20yT-tpKCXglkVMI58Ha_ZRYU8uC0B)
+I'll probably be adding new features for a while to come. There's plenty of janky stuff going on, so imitate at your own peril... but I do suggest you tune in and watch! It's every Tuesday from 8 PM to 11 PM Eastern. [My Twitch channel is here,](https://www.twitch.tv/thquinn) and all the recorded streams are on [my YouTube channel here.](https://www.youtube.com/playlist?list=PLrM20yT-tpKCXglkVMI58Ha_ZRYU8uC0B)
 
 ## Thanks to:
 * **Eric Mann-Hielscher** for the countdown music.
