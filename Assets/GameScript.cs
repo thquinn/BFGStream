@@ -55,6 +55,7 @@ public class GameScript : MonoBehaviour {
 
     public GameObject botPrefab;
     public BotScript botScript;
+    public DBScript dbScript;
     public ToastsScript toastsScript;
 
     public GameObject ui, viewerPopups, pointFloaters;
@@ -593,12 +594,12 @@ public class GameScript : MonoBehaviour {
                         continue;
                     }
                     string word = tokens[1];
-                    string definition = GetDictionaryDefinition(word);
+                    string definition = dbScript.QueryDefinition(word);
                     if (definition == null) {
                         botScript.Whisper(kvp.Key, "Couldn't find a definition for that word.");
                         continue;
                     }
-                    toastsScript.Toast(ToastType.DICTIONARY, string.Format("{0}\n{1}", word.ToUpper(), definition));
+                    toastsScript.Toast(ToastType.DICTIONARY, definition);
                 }
             }
             botScript.adminCommands.Clear();
@@ -719,9 +720,11 @@ public class GameScript : MonoBehaviour {
     }
     // Commands.
     void StartTimer(bool button) {
-        if (finalizeTimerActive && Application.isEditor) {
-            finalizeTimer = .01f;
-            sfxCountdown.Stop();
+        if (finalizeTimerActive) {
+            if (Application.isEditor) {
+                finalizeTimer = .01f;
+                sfxCountdown.Stop();
+            }
             return;
         }
         if (gameWon) {
