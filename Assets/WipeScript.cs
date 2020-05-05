@@ -64,6 +64,7 @@ public class WipeScript : MonoBehaviour
         frames = 0;
         if (on) {
             Dictionary<string, int> totalScores;
+            /*
             if (Application.isEditor) {
                 // A set of example scores for testing purposes.
                 totalScores = new Dictionary<string, int>() {
@@ -79,8 +80,9 @@ public class WipeScript : MonoBehaviour
                     { "this_is_a_bug_if_visible", 0 },
                 };
             } else {
+            */
                 totalScores = scores.GetTotalScores();
-            }
+            //}
             var ordered = totalScores.Where(kvp => kvp.Value > 0).OrderByDescending(kvp => kvp.Value).ToArray();
             StringBuilder namesSB = new StringBuilder(), scoresSB = new StringBuilder();
             namesSB.Append("<size=45pt>");
@@ -94,11 +96,14 @@ public class WipeScript : MonoBehaviour
                 scoresSB.AppendLine(ordered[i].Value.ToString("N0"));
             }
             totalTMP.text = string.Format("{0} Leaderboard", System.DateTime.Now.ToString("MMMM"));
+            if (ordered.Length == 0) {
+                totalTMP.text += "\n<size=24pt>A new month has begun!";
+            }
             namesTMP.text = namesSB.ToString();
             scoresTMP.text = scoresSB.ToString();
         }
     }
     public bool IsUp() {
-        return wipe.transform.localPosition.magnitude < 1;
+        return wipe.transform.localPosition.sqrMagnitude < 1;
     }
 }

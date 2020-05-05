@@ -20,4 +20,5 @@ I'll probably be adding new features for a while to come. There's plenty of jank
 ## Thanks to:
 * **Eric Mann-Hielscher** for the countdown music.
 * [**YouFulca**](https://wingless-seraph.net/en/index.html) for the lightning round music.
+* [**John McDowell**](https://github.com/macdub) for his [Wiktionary parsing](https://github.com/macdub/go-wiktionary-parse).
 * and finally, to **Will**: my star, my perfect silence...
