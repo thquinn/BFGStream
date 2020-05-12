@@ -391,8 +391,8 @@ public class GameScript : MonoBehaviour {
         // Lightning round music.
         if (lightningRound && words.Count > 0 && !gameWon) {
             if (!sfxLightningIntro.isPlaying && !sfxLightningLoop.isPlaying) {
-                sfxLightningIntro.volume = .4f;
-                sfxLightningLoop.volume = .4f;
+                sfxLightningIntro.volume = .2f;
+                sfxLightningLoop.volume = .2f;
                 sfxLightningIntro.Play();
                 sfxLightningLoop.PlayScheduled(AudioSettings.dspTime + sfxLightningIntro.clip.length);
             }
@@ -1051,10 +1051,12 @@ public class GameScript : MonoBehaviour {
         }
     }
 
-    bool WordUsed(string word) {
+    bool WordUsed(string input) {
         foreach (string[] round in words) {
-            if (round.Contains(word)) {
-                return true;
+            foreach (string word in round) {
+                if (IsLemmaMatch(input, word)) {
+                    return true;
+                }
             }
         }
         return false;

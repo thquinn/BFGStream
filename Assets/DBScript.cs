@@ -47,6 +47,9 @@ public class DBScript : MonoBehaviour
             if (definition.Contains("#")) {
                 definition = definition.Substring(0, definition.IndexOf('#'));
             }
+            if (definition.Length == 0) {
+                return null;
+            }
             string partOfSpeech = PARTS_OF_SPEECH_ABBREVS[reader.GetString(1)];
             return string.Format("{0} <i>{1}.</i>\n{2}", word, partOfSpeech, definition);
         }
