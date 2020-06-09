@@ -69,8 +69,8 @@ public class ViewerPopupScript : MonoBehaviour
     public void AddLine(string line) {
         lines.Add(line);
     }
-    public void AddLine(string username, int points, int total, bool doubledUp) {
-        lines.Add(string.Format("{0} +{1} pts{2} <size=75%><voffset=0.15em>►</voffset></size> {3}", username, points, doubledUp ? " (x2!)" : "", total));
+    public void AddLine(string username, int points, int total, bool doubledUp, string multiplierString) {
+        lines.Add(string.Format("{0} +{1} pts{2} <size=75%><voffset=0.15em>►</voffset></size> {3}", username, points, doubledUp ? multiplierString : "", total));
     }
     public void RemoveLastLine() {
         if (lines.Count > 0) {

@@ -16,7 +16,7 @@ public class TintScript : MonoBehaviour
     public GameScript gameScript;
     public WipeScript wipeScript;
 
-    public ParticleSystem[] gradientParticles, darkParticles;
+    public ParticleSystem[] gradientParticles, midParticles, darkParticles;
     public Image[] lightImages, midImages, darkImages;
     public SpriteRenderer[] lightRenderers, midRenderers, darkRenderers;
     public TextMeshProUGUI[] texts;
@@ -51,6 +51,13 @@ public class TintScript : MonoBehaviour
         foreach (ParticleSystem particle in gradientParticles) {
             var main = particle.main;
             main.startColor = new ParticleSystem.MinMaxGradient(colorLight, colorDark);
+        }
+        foreach (ParticleSystem particle in midParticles) {
+            var main = particle.main;
+            float a = main.startColor.color.a;
+            Color c = colorMid;
+            c.a = a;
+            main.startColor = c;
         }
         foreach (ParticleSystem particle in darkParticles) {
             var main = particle.main;

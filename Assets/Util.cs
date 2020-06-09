@@ -41,4 +41,7 @@ public class Util {
         var chars = text.Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark).ToArray();
         return new string(chars).Normalize(NormalizationForm.FormC);
     }
+    public static string CanonicalizeViewer(string viewer) {
+        return viewer.EndsWith("!") ? viewer.Substring(0, viewer.Length - 1) : viewer;
+    }
 }

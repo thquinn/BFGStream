@@ -138,4 +138,5 @@ public enum ToastType : int {
     PUNISH = 12,
     GIFT = 13,
     DICTIONARY = 14,
+    ADDITIONAL_WORD = 15,
 }

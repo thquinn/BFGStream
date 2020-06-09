@@ -199,6 +199,10 @@ public class BotScript : MonoBehaviour {
             lock (events) {
                 events.Add(new Event(EventType.RECOUNT, e.Login));
             }
+        } else if (e.RewardTitle == "Think Twice") {
+            lock (events) {
+                events.Add(new Event(EventType.ADDITIONAL_WORD, e.Login));
+            }
         }
     }
 
@@ -244,5 +248,5 @@ public class Event {
 }
 
 public enum EventType {
-    BITS, DOUBLE_UP, FOLLOW, PUNISH, RECOUNT, SUBSCRIPTION
+    ADDITIONAL_WORD, BITS, DOUBLE_UP, FOLLOW, PUNISH, RECOUNT, SUBSCRIPTION
 }
