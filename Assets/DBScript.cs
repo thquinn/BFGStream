@@ -40,7 +40,7 @@ public class DBScript : MonoBehaviour
         }
         SQLiteCommand command = dictionaryConnection.CreateCommand();
         command.CommandType = System.Data.CommandType.Text;
-        command.CommandText = string.Format("SELECT definition, lemma FROM dictionary WHERE word=\"{0}\" COLLATE NOCASE ORDER BY id LIMIT 1", word);
+        command.CommandText = string.Format("SELECT definition, lexical_category FROM dictionary WHERE word=\"{0}\" COLLATE NOCASE ORDER BY id LIMIT 1", word);
         SQLiteDataReader reader = command.ExecuteReader();
         while (reader.Read()) {
             string definition = REGEX_WIKTIONARY_MARKUP.Replace(reader.GetString(0), "").Trim();
