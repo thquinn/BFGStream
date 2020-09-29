@@ -47,6 +47,9 @@ public class DBScript : MonoBehaviour
             if (definition.Contains("#")) {
                 definition = definition.Substring(0, definition.IndexOf('#'));
             }
+            while (definition.Length > 0 && !char.IsLetter(definition[0])) {
+                definition = definition.Substring(1);
+            }
             if (definition.Length == 0) {
                 return null;
             }

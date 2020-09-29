@@ -637,6 +637,9 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 28e0788ac0ccc6f48bdb600b12733f8c, type: 3}
   - {fileID: 21300000, guid: 6ee4cd9401d0d224ea265704b97d9bba, type: 3}
   - {fileID: 21300000, guid: 23143ddee4ad25c44b2c12db1af929d6, type: 3}
+  - {fileID: 21300000, guid: fea339bc75880814a9393e55c0a1f7cb, type: 3}
+  - {fileID: 21300000, guid: ac2c892cf433aae4594a4defd3f510e7, type: 3}
+  - {fileID: 21300000, guid: 527bfd3fc5b3036409f68796d5c2d2de, type: 3}
   sfxToast: {fileID: 241271541}
 --- !u!1 &84787606
 GameObject:
@@ -6165,7 +6168,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: 5e343e3189c299c40b51183de88cc10f, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 1
+  m_Volume: 0.66
   m_Pitch: 0.8
   Loop: 0
   Mute: 0
@@ -16014,7 +16017,7 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 0.3
+      scalar: 0.2
       minScalar: 0.1
       maxCurve:
         serializedVersion: 2
@@ -16330,7 +16333,7 @@ ParticleSystem:
         m_PostInfinity: 2
         m_RotationOrder: 4
     randomizeRotationDirection: 0
-    maxNumParticles: 1000
+    maxNumParticles: 100000
     size3D: 0
     rotation3D: 0
     gravityModifier:
@@ -16395,7 +16398,7 @@ ParticleSystem:
     boxThickness: {x: 0, y: 0, z: 0}
     radiusThickness: 1
     donutRadius: 0.2
-    m_Position: {x: 0, y: 0.4, z: 0}
+    m_Position: {x: 0, y: 0.5, z: 0}
     m_Rotation: {x: 0, y: 0, z: 240}
     m_Scale: {x: 1, y: 1, z: 1}
     placementMode: 0
@@ -16595,7 +16598,7 @@ ParticleSystem:
     rateOverTime:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 50
+      scalar: 1000
       minScalar: 10
       maxCurve:
         serializedVersion: 2
@@ -17034,7 +17037,7 @@ ParticleSystem:
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 0}
-        key1: {r: 1, g: 1, b: 1, a: 0.30980393}
+        key1: {r: 1, g: 1, b: 1, a: 0.1882353}
         key2: {r: 0, g: 0, b: 0, a: 0}
         key3: {r: 0, g: 0, b: 0, a: 0}
         key4: {r: 0, g: 0, b: 0, a: 0}
@@ -21603,7 +21606,7 @@ MonoBehaviour:
   m_enableWordWrapping: 1
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
-  m_firstOverflowCharacterIndex: -1
+  m_firstOverflowCharacterIndex: 0
   m_linkedTextComponent: {fileID: 0}
   m_isLinkedTextComponent: 0
   m_isTextTruncated: 0

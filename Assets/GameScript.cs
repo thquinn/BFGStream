@@ -102,7 +102,9 @@ public class GameScript : MonoBehaviour {
     int[] scores, lastScores;
     RollingScores viewerScores;
     public HashSet<string> doubledUpViewers, lastDoubledUpViewers;
+    HashSet<string> doubledLifeViewers;
     public HashSet<string> additionalWordViewers;
+    Dictionary<string, int> calledShots;
     Dictionary<string, int> viewerStreaks;
 	HashSet<string> viewersMatchedToday;
     HashSet<string> viewersFollowedToday;
@@ -117,6 +119,8 @@ public class GameScript : MonoBehaviour {
     public bool lightningRound;
 
     void Start() {
+        Application.targetFrameRate = 60;
+
         players = CONFIG["host_usernames"].Split(',').ToList();
         displayNames = CONFIG["host_display_names"].Split(',').ToList();
 
@@ -141,7 +145,9 @@ public class GameScript : MonoBehaviour {
         viewerScores = new RollingScores(3600);
         doubledUpViewers = new HashSet<string>();
         lastDoubledUpViewers = new HashSet<string>();
+        doubledLifeViewers = new HashSet<string>();
         additionalWordViewers = new HashSet<string>();
+        calledShots = new Dictionary<string, int>();
         viewerStreaks = new Dictionary<string, int>();
 		viewersMatchedToday = new HashSet<string>();
         viewersFollowedToday = new HashSet<string>();
@@ -279,6 +285,11 @@ public class GameScript : MonoBehaviour {
                 viewerWords.Add("wurstwurstwurstwurst" + i, "sandwich");
             }
         }
+        if (Input.GetKeyDown(KeyCode.C)) {
+            lock (botScript.events) {
+                botScript.events.Add(new Event(EventType.CALL_SHOT, "caeonosphere", "weil"));
+            }
+        }
         // GUBED GUBED GUBED
 
         // Get inputs.
@@ -298,10 +309,7 @@ public class GameScript : MonoBehaviour {
             lightningRound = true;
         }
         if (Input.GetButtonDown("Toggle Wipe")) {
-            if (gameWon) {
-                NewGame();
-            }
-            wipeScript.Toggle(viewerScores);
+            ToggleWipe();
         }
         if (Input.GetButtonDown("New Game")) {
             NewGame();
@@ -312,6 +320,14 @@ public class GameScript : MonoBehaviour {
         if (Input.GetButtonDown("Restart Bot")) {
             DestroyImmediate(botScript.gameObject);
             botScript = Instantiate(botPrefab).GetComponent<BotScript>();
+        }
+
+        if (!gameWon) {
+            foreach (string user in doubledLifeViewers) {
+                if (!doubledUpViewers.Contains(user)) {
+                    botScript.events.Add(new Event(EventType.DOUBLE_UP, user));
+                }
+            }
         }
         BotUpdate();
         UpdateLeaderboard();
@@ -355,7 +371,8 @@ public class GameScript : MonoBehaviour {
         } else if (gameWon) {
             viewersTMP.text = "Victory!";
         } else {
-            viewersTMP.text = viewerWords.Count + (viewerWords.Count == 1 ? " viewer locked in" : " viewers locked in");
+            int viewerCount = viewerWords.Keys.Where(k => !k.EndsWith("!")).Count();
+            viewersTMP.text = viewerCount + (viewerCount == 1 ? " viewer locked in" : " viewers locked in");
         }
         // Update the timer.
         bool allWordsSubmitted = true;
@@ -400,8 +417,8 @@ public class GameScript : MonoBehaviour {
             }
         } else if (sfxLightningIntro.isPlaying || sfxLightningLoop.isPlaying) {
             if (sfxLightningIntro.volume > 0) {
-                sfxLightningIntro.volume -= .005f;
-                sfxLightningLoop.volume -= .005f;
+                sfxLightningIntro.volume -= .004f;
+                sfxLightningLoop.volume -= .004f;
             } else {
                 sfxLightningIntro.Stop();
                 sfxLightningLoop.Stop();
@@ -490,7 +507,7 @@ public class GameScript : MonoBehaviour {
                 ClaimWin();
             }
             if (botScript.adminCommands.ContainsValue("!l")) {
-                wipeScript.Toggle(viewerScores);
+                ToggleWipe();
             }
             if (botScript.adminCommands.ContainsValue("!s")) {
                 botScript.Spam();
@@ -669,9 +686,25 @@ public class GameScript : MonoBehaviour {
                         }
                         toastsScript.Toast(ToastType.BITS, toastMessage);
                     }
-                } else if (e.type == EventType.DOUBLE_UP) {
+                } else if (e.type == EventType.CALL_SHOT) {
                     string user = e.info[0];
                     if (players.Contains(user)) {
+                        continue;
+                    }
+                    string player = e.info[1].ToLower();
+                    int playerIndex = Util.GetIndexOfShortestEditDistance(player, displayNames.Select(p => p.ToLower()).ToArray());
+                    calledShots[user] = playerIndex;
+                    toastsScript.Toast(ToastType.CALL_SHOT, string.Format("{0} thinks they're going to match with {1}!", user, displayNames[playerIndex]));
+                } else if (e.type == EventType.DOUBLE_LIFE) {
+                    string user = e.info[0];
+                    if (players.Contains(user) || doubledLifeViewers.Contains(user)) {
+                        continue;
+                    }
+                    doubledLifeViewers.Add(user);
+                    toastsScript.Toast(ToastType.DOUBLE_LIFE, string.Format("{0} is living a DOUBLE LYFE!", GetUsernameString(user)));
+                } else if (e.type == EventType.DOUBLE_UP) {
+                    string user = e.info[0];
+                    if (players.Contains(user) || doubledUpViewers.Contains(user)) {
                         continue;
                     }
                     doubledUpViewers.Add(user);
@@ -816,7 +849,9 @@ public class GameScript : MonoBehaviour {
         lastViewerWords.Clear();
         doubledUpViewers.Clear();
         lastDoubledUpViewers.Clear();
+        doubledLifeViewers.Clear();
         additionalWordViewers.Clear();
+        calledShots.Clear();
         for (int i = 0; i < newestWordScripts.Length; i++) {
             if (newestWordScripts[i] != null) {
                 newestWordScripts[i].destroying = true;
@@ -980,16 +1015,20 @@ public class GameScript : MonoBehaviour {
                                                  .ThenByDescending(v => doubledUpViewers.Contains(v))
                                                  .ThenByDescending(v => viewerScores.GetScore(v)).ToArray();
         int viewerPopupCount = BASE_VIEWER_POPUP_COUNT - 2 * winningWords.Length + 2;
+        Dictionary<string, List<int>> matchIndices = new Dictionary<string, List<int>>();
         foreach (string viewer in sortedViewers) {
-            string canonicalViewer = viewer.EndsWith("!") ? viewer.Substring(0, viewer.Length - 1) : viewer;
+            string canonicalViewer = Util.CanonicalizeViewer(viewer);
             string viewerWord = viewerWords[viewer];
             bool doubledUp = doubledUpViewers.Contains(canonicalViewer);
-            doubledUpViewers.Remove(canonicalViewer);
             bool matched = false;
+            if (!matchIndices.ContainsKey(canonicalViewer)) {
+                matchIndices[canonicalViewer] = new List<int>();
+            }
             for (int i = 0; i < newestWords.Length; i++) {
                 if (IsLemmaMatch(viewerWord, newestWords[i])) {
                     matched = true;
                     anyMatches = true;
+                    matchIndices[canonicalViewer].Add(i);
                     int pointsGained = Mathf.RoundToInt(roundPointValue * (doubledUp ? doubleUpMultiplier : 1));
                     scores[i] += pointsGained;
                     viewerScores.Award(canonicalViewer, pointsGained, time);
@@ -1032,6 +1071,24 @@ public class GameScript : MonoBehaviour {
                     subscriberSubmissions.Add(viewerWord);
                 }
             }
+        }
+        foreach (string calledShotViewer in calledShots.Keys.ToArray()) {
+            if (!matchIndices.ContainsKey(calledShotViewer)) {
+                continue;
+            }
+            List<int> viewerMatchIndices = matchIndices[calledShotViewer];
+            if (viewerMatchIndices.Count == 1 && viewerMatchIndices[0] == calledShots[calledShotViewer]) {
+                int points = Mathf.RoundToInt(400 * (doubledUpViewers.Contains(calledShotViewer) ? doubleUpMultiplier : 1));
+                viewerScores.Award(calledShotViewer, points, time);
+                scores[viewerMatchIndices[0]] += points;
+                toastsScript.Toast(ToastType.CALL_SHOT, string.Format("{0} called their shot for an additional {1} points!", GetUsernameString(calledShotViewer), points));
+            } else {
+                toastsScript.Toast(ToastType.CALL_SHOT_MISSED, string.Format("{0} threw away their shot...", GetUsernameString(calledShotViewer)));
+            }
+            calledShots.Remove(calledShotViewer);
+        }
+        foreach (string viewer in sortedViewers) {
+            doubledUpViewers.Remove(Util.CanonicalizeViewer(viewer));
         }
         for (int i = 0; i < matchCounts.Length; i++) {
             if (matchCounts[i] > viewerPopupCount + 1) {
@@ -1127,6 +1184,12 @@ public class GameScript : MonoBehaviour {
         string title = string.Join(" ", tokens, 2, tokens.Length - 2).ToUpper();
         viewerTitles[username] = title;
         toastsScript.Toast(ToastType.TITLE, GetUsernameString(username) + " was granted the title \"" + title + "\"!");
+    }
+    void ToggleWipe() {
+        if (gameWon) {
+            NewGame();
+        }
+        wipeScript.Toggle(viewerScores);
     }
 
     void LoadScores() {

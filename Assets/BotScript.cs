@@ -187,7 +187,15 @@ public class BotScript : MonoBehaviour {
         }
     }
     private void Pubsub_OnRewardRedeemed(object sender, OnRewardRedeemedArgs e) {
-        if (e.RewardTitle == "Double Up!") {
+        if (e.RewardTitle == "Call Your Shot") {
+            lock (events) {
+                events.Add(new Event(EventType.CALL_SHOT, e.Login, e.Message));
+            }
+        } else if (e.RewardTitle == "Double Lyfe!") {
+            lock (events) {
+                events.Add(new Event(EventType.DOUBLE_LIFE, e.Login));
+            }
+        } else if (e.RewardTitle == "Double Up!") {
             lock (events) {
                 events.Add(new Event(EventType.DOUBLE_UP, e.Login));
             }
@@ -248,5 +256,5 @@ public class Event {
 }
 
 public enum EventType {
-    ADDITIONAL_WORD, BITS, DOUBLE_UP, FOLLOW, PUNISH, RECOUNT, SUBSCRIPTION
+    ADDITIONAL_WORD, BITS, CALL_SHOT, DOUBLE_LIFE, DOUBLE_UP, FOLLOW, PUNISH, RECOUNT, SUBSCRIPTION
 }

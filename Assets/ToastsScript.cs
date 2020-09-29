@@ -139,4 +139,7 @@ public enum ToastType : int {
     GIFT = 13,
     DICTIONARY = 14,
     ADDITIONAL_WORD = 15,
+    DOUBLE_LIFE = 16,
+    CALL_SHOT = 17,
+    CALL_SHOT_MISSED = 18,
 }
