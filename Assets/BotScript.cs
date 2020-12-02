@@ -207,6 +207,10 @@ public class BotScript : MonoBehaviour {
             lock (events) {
                 events.Add(new Event(EventType.RECOUNT, e.Login));
             }
+        } else if (e.RewardTitle == "Set Your Title") {
+            lock (events) {
+                events.Add(new Event(EventType.TITLE_CHANGE_START, e.Login));
+            }
         } else if (e.RewardTitle == "Think Twice") {
             lock (events) {
                 events.Add(new Event(EventType.ADDITIONAL_WORD, e.Login));
@@ -256,5 +260,5 @@ public class Event {
 }
 
 public enum EventType {
-    ADDITIONAL_WORD, BITS, CALL_SHOT, DOUBLE_LIFE, DOUBLE_UP, FOLLOW, PUNISH, RECOUNT, SUBSCRIPTION
+    ADDITIONAL_WORD, BITS, CALL_SHOT, DOUBLE_LIFE, DOUBLE_UP, FOLLOW, PUNISH, RECOUNT, SUBSCRIPTION, TITLE_CHANGE_START
 }

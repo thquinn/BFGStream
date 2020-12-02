@@ -1,5 +1,5 @@
 ﻿using Assets;
-using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -105,6 +105,7 @@ public class GameScript : MonoBehaviour {
     HashSet<string> doubledLifeViewers;
     public HashSet<string> additionalWordViewers;
     Dictionary<string, int> calledShots;
+    HashSet<string> titleUpdaters;
     Dictionary<string, int> viewerStreaks;
 	HashSet<string> viewersMatchedToday;
     HashSet<string> viewersFollowedToday;
@@ -148,12 +149,18 @@ public class GameScript : MonoBehaviour {
         doubledLifeViewers = new HashSet<string>();
         additionalWordViewers = new HashSet<string>();
         calledShots = new Dictionary<string, int>();
+        titleUpdaters = new HashSet<string>();
         viewerStreaks = new Dictionary<string, int>();
 		viewersMatchedToday = new HashSet<string>();
         viewersFollowedToday = new HashSet<string>();
         subscribers = new HashSet<string>();
         pendingLastFrame = new bool[players.Count];
         viewerPopupScripts = new ViewerPopupScript[players.Count];
+        try {
+            LoadTitles();
+        } catch (Exception) {
+            Debug.Log("Couldn't find the save database. TODO: Create an empty one.");
+        }
         try {
             LoadScores();
         } catch (Exception e) {
@@ -641,12 +648,34 @@ public class GameScript : MonoBehaviour {
         }
         lock (botScript.viewerCommands) {
             foreach (var kvp in botScript.viewerCommands) {
+                string user = kvp.Key;
                 if (kvp.Value == "!score") {
-                    if (!viewerScores.SeenViewer(kvp.Key)) {
-                        botScript.Whisper(kvp.Key, "I haven't seen you before...");
+                    if (!viewerScores.SeenViewer(user)) {
+                        botScript.Whisper(user, "I haven't seen you before...");
                         continue;
                     }
                     botScript.Whisper(kvp.Key, string.Format("Your score in the last hour is {0}, and your total score is {1}.", viewerScores.GetScore(kvp.Key, true).ToString("N0"), viewerScores.GetScore(kvp.Key, false).ToString("N0")));
+                } else if (kvp.Value.StartsWith("!title ")) {
+                    if (!titleUpdaters.Contains(user)) {
+                        botScript.Whisper(user, "Redeem the \"Set Your Title\" channel point reward to use this command.");
+                        continue;
+                    }
+                    HashSet<string> ownedWords = new HashSet<string>(dbScript.GetOwnedWords(user));
+                    string[] tokens = kvp.Value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    bool valid = true;
+                    for (int i = 1; i < tokens.Length; i++) {
+                        if (!ownedWords.Contains(tokens[i].ToLower())) {
+                            valid = false;
+                        }
+                    }
+                    if (!valid) {
+                        botScript.Whisper(user, "You're missing one or more of those words from your collection. Double check and try again.");
+                        continue;
+                    }
+                    string title = string.Join(" ", tokens, 1, tokens.Length - 1);
+                    SetTitle(user, title);
+                    toastsScript.Toast(ToastType.TITLE, GetUsernameString(user) + " claimed the title \"" + title.ToUpper() + "\"!");
+                    titleUpdaters.Remove(user);
                 }
             }
             botScript.viewerCommands.Clear();
@@ -769,6 +798,16 @@ public class GameScript : MonoBehaviour {
                     } else {
                         toastsScript.Toast(ToastType.GIFT, string.Format("{0} gifted a subscription to {1}!", GetUsernameString(user), GetUsernameString(recipient)));
                     }
+                } else if (e.type == EventType.TITLE_CHANGE_START) {
+                    string user = e.info[0];
+                    titleUpdaters.Add(user);
+                    string[] ownedWords = dbScript.GetOwnedWords(user);
+                    StartCoroutine(Util.UploadToPaste(string.Join("\n", ownedWords), request => {
+                        JObject json = JObject.Parse(request.downloadHandler.text);
+                        string pasteURL = json["link"].Value<string>();
+                        botScript.Whisper(user, "View your word collection here: " + pasteURL);
+                        botScript.Whisper(user, "Then send me \"!title\" followed by up to three of your collected words.");
+                    }));
                 }
             }
             botScript.events.Clear();
@@ -1032,6 +1071,7 @@ public class GameScript : MonoBehaviour {
                     int pointsGained = Mathf.RoundToInt(roundPointValue * (doubledUp ? doubleUpMultiplier : 1));
                     scores[i] += pointsGained;
                     viewerScores.Award(canonicalViewer, pointsGained, time);
+                    dbScript.AddOwnedWord(canonicalViewer, newestWords[i]);
 
                     matchCounts[i]++;
                     if (matchCounts[i] <= viewerPopupCount + 1) {
@@ -1181,9 +1221,13 @@ public class GameScript : MonoBehaviour {
             botScript.Whisper(admin, "I haven't seen a viewer with that username.");
             return;
         }
-        string title = string.Join(" ", tokens, 2, tokens.Length - 2).ToUpper();
-        viewerTitles[username] = title;
-        toastsScript.Toast(ToastType.TITLE, GetUsernameString(username) + " was granted the title \"" + title + "\"!");
+        string title = string.Join(" ", tokens, 2, tokens.Length - 2);
+        SetTitle(username, title);
+        toastsScript.Toast(ToastType.TITLE, GetUsernameString(username) + " was granted the title \"" + title.ToUpper() + "\"!");
+    }
+    void SetTitle(string username, string title) {
+        viewerTitles[username] = title.ToUpper();
+        dbScript.SetTitle(username, title);
     }
     void ToggleWipe() {
         if (gameWon) {
@@ -1192,42 +1236,17 @@ public class GameScript : MonoBehaviour {
         wipeScript.Toggle(viewerScores);
     }
 
+    void LoadTitles() {
+        viewerTitles = dbScript.GetTitles();
+    }
+
     void LoadScores() {
-        if (Application.isEditor) {
-            return;
+        foreach (var kvp in dbScript.LoadScores(Util.GetMonthString())) {
+            viewerScores.SetTotalScore(kvp.Key, kvp.Value);
         }
-        DirectoryInfo logDirectory = new DirectoryInfo(Application.dataPath);
-        FileInfo[] logFiles = logDirectory.GetFiles("log*.txt");
-        if (logFiles.Length == 0) {
-            return;
-        }
-        Array.Sort(logFiles, (f1, f2) => f1.Name.CompareTo(f2.Name));
-        FileInfo log = logFiles[logFiles.Length - 1];
-        using (StreamReader sr = log.OpenText()) {
-            string s = "";
-            while ((s = sr.ReadLine()) != null) {
-                if (s.Length == 0) {
-                    continue;
-                }
-                string[] tokens = s.Split(':');
-                viewerScores.SetTotalScore(tokens[0], int.Parse(tokens[1]));
-            }
-        }
-        logFileSuffix = int.Parse(log.Name.Substring(3, log.Name.Length - 7)) + 1;
     }
     void SaveScores() {
-        if (Application.isEditor) {
-            return;
-        }
-        if (viewerScores.NumViewers() == 0) {
-            return;
-        }
-        string path = Application.dataPath + "/log" + logFileSuffix + ".txt";
-        List<string> output = new List<string>();
-        foreach (var kvp in viewerScores.GetTotalScores().OrderByDescending(kvp => kvp.Value)) {
-            output.Add(string.Format("{0}:{1}", kvp.Key, kvp.Value));
-        }
-        File.WriteAllLines(path, output.ToArray());
+        dbScript.SaveScores(Util.GetMonthString(), viewerScores.GetTotalScores());
     }
 
     void LoadLemmas() {

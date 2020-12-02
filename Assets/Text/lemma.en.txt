@@ -605,7 +605,7 @@ wonder/13719 -> wondered,wondering,wonders
 player/13718 -> players
 per/13664 -> pers
 express/13656 -> expressed,expressing,expresses
-drink/13645 -> drinks,drinking,drank,drunk
+drink/13645 -> drinks,drinking,drank
 fight/13619 -> fighting,fought,fights
 attention/13564 -> attentions
 refer/13560 -> referred,refers,referring
