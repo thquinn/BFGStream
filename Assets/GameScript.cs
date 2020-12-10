@@ -85,7 +85,9 @@ public class GameScript : MonoBehaviour {
     // Particles.
     public ParticleSystem confetti, streamers;
     // Sound.
-    public AudioSource sfxLock, sfxWin, sfxCountdown, sfxLightningIntro, sfxLightningLoop, sfxLightningWin;
+    public AudioSource sfxLock, sfxWin, sfxCountdown;
+    public AudioSource[] sfxLightningIntros, sfxLightningLoops, sfxLightningWins;
+    int lightningSFXIndex = 0;
     float countdownVolume;
     // Text resources.
     public TextAsset lemmas, dictionaryAsset;
@@ -108,7 +110,6 @@ public class GameScript : MonoBehaviour {
     HashSet<string> titleUpdaters;
     Dictionary<string, int> viewerStreaks;
 	HashSet<string> viewersMatchedToday;
-    HashSet<string> viewersFollowedToday;
     public HashSet<string> subscribers;
     bool[] pendingLastFrame;
     public bool gameWon;
@@ -152,14 +153,13 @@ public class GameScript : MonoBehaviour {
         titleUpdaters = new HashSet<string>();
         viewerStreaks = new Dictionary<string, int>();
 		viewersMatchedToday = new HashSet<string>();
-        viewersFollowedToday = new HashSet<string>();
         subscribers = new HashSet<string>();
         pendingLastFrame = new bool[players.Count];
         viewerPopupScripts = new ViewerPopupScript[players.Count];
         try {
             LoadTitles();
-        } catch (Exception) {
-            Debug.Log("Couldn't find the save database. TODO: Create an empty one.");
+        } catch (Exception e) {
+            Debug.Log(string.Format("Loading viewer titles failed: {0}", e));
         }
         try {
             LoadScores();
@@ -416,19 +416,19 @@ public class GameScript : MonoBehaviour {
         }
         // Lightning round music.
         if (lightningRound && words.Count > 0 && !gameWon) {
-            if (!sfxLightningIntro.isPlaying && !sfxLightningLoop.isPlaying) {
-                sfxLightningIntro.volume = .2f;
-                sfxLightningLoop.volume = .2f;
-                sfxLightningIntro.Play();
-                sfxLightningLoop.PlayScheduled(AudioSettings.dspTime + sfxLightningIntro.clip.length);
+            if (!sfxLightningIntros[lightningSFXIndex].isPlaying && !sfxLightningLoops[lightningSFXIndex].isPlaying) {
+                sfxLightningIntros[lightningSFXIndex].volume = .2f;
+                sfxLightningLoops[lightningSFXIndex].volume = lightningSFXIndex == 0 ? .2f : .3f;
+                sfxLightningIntros[lightningSFXIndex].Play();
+                sfxLightningLoops[lightningSFXIndex].PlayScheduled(AudioSettings.dspTime + sfxLightningIntros[lightningSFXIndex].clip.length);
             }
-        } else if (sfxLightningIntro.isPlaying || sfxLightningLoop.isPlaying) {
-            if (sfxLightningIntro.volume > 0) {
-                sfxLightningIntro.volume -= .004f;
-                sfxLightningLoop.volume -= .004f;
+        } else if (sfxLightningIntros[lightningSFXIndex].isPlaying || sfxLightningLoops[lightningSFXIndex].isPlaying) {
+            if (sfxLightningIntros[lightningSFXIndex].volume > 0) {
+                sfxLightningIntros[lightningSFXIndex].volume -= .004f;
+                sfxLightningLoops[lightningSFXIndex].volume -= .004f;
             } else {
-                sfxLightningIntro.Stop();
-                sfxLightningLoop.Stop();
+                sfxLightningIntros[lightningSFXIndex].Stop();
+                sfxLightningLoops[lightningSFXIndex].Stop();
             }
         }
 
@@ -478,7 +478,11 @@ public class GameScript : MonoBehaviour {
                         pendingWords[playerIndex] = kvp.Value;
                     } else {
                         if (!viewerScores.SeenViewer(user)) {
-                            toastsScript.Toast(ToastType.NEW_PLAYER, string.Format("{0} submitted their first word. Welcome!", GetUsernameString(user)));
+                            if (dbScript.HasAnyScore(user)) {
+                                toastsScript.Toast(ToastType.NEW_PLAYER, string.Format("{0} submitted their first word for the month. Welcome back!", GetUsernameString(user)));
+                            } else {
+                                toastsScript.Toast(ToastType.NEW_PLAYER, string.Format("{0} submitted their first word. Welcome!", GetUsernameString(user)));
+                            }
                         }
                         if (!viewerWords.ContainsKey(user)) {
                             viewerScores.Award(user, 25, time);
@@ -527,7 +531,8 @@ public class GameScript : MonoBehaviour {
                 if (kvp.Value.StartsWith("!p ")) {
                     string[] tokens = kvp.Value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (tokens.Length == 2) {
-                        tokens = new string[] { tokens[0], tokens[1], "100" };
+                        int prevRoundPoints = words.Count >= 2 ? GetPoints(words.Count - 2) : 100;
+                        tokens = new string[] { tokens[0], tokens[1], Mathf.Min(100, prevRoundPoints).ToString() };
                     }
                     int points = 0;
                     if (tokens.Length != 3 || !int.TryParse(tokens[2], out points)) {
@@ -662,6 +667,10 @@ public class GameScript : MonoBehaviour {
                     }
                     HashSet<string> ownedWords = new HashSet<string>(dbScript.GetOwnedWords(user));
                     string[] tokens = kvp.Value.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (tokens.Length < 2 || tokens.Length > 4) {
+                        botScript.Whisper(user, "Your title must be 1-3 words long. Try again.");
+                        continue;
+                    }
                     bool valid = true;
                     for (int i = 1; i < tokens.Length; i++) {
                         if (!ownedWords.Contains(tokens[i].ToLower())) {
@@ -741,10 +750,11 @@ public class GameScript : MonoBehaviour {
                     toastsScript.Toast(ToastType.DOUBLE_UP, string.Format("{0} thinks they can double up!{1}", GetUsernameString(user), multiplierString));
                 } else if (e.type == EventType.FOLLOW) {
                     string user = e.info[0];
-                    if (!viewersFollowedToday.Contains(user)) {
-                        toastsScript.Toast(ToastType.FOLLOW, string.Format("{0} followed the channel!", GetUsernameString(user)));
-                        viewersFollowedToday.Add(user);
+                    if (dbScript.HasFollowed(user)) {
+                        continue;
                     }
+                    toastsScript.Toast(ToastType.FOLLOW, string.Format("{0} followed the channel!", GetUsernameString(user)));
+                    dbScript.Follow(user);
                 } else if (e.type == EventType.PUNISH) {
                     string user = e.info[0];
                     if (players.Contains(user)) {
@@ -790,10 +800,10 @@ public class GameScript : MonoBehaviour {
                     if (user == null) {
                         toastsScript.Toast(ToastType.GIFT, string.Format("A kind stranger gifted a subscription to {0}!", GetUsernameString(recipient)));
                     } else if (recipient == null) {
-                        if (cumulative == null) {
+                        if (streak == null) {
                             toastsScript.Toast(ToastType.SUB, string.Format("{0} subscribed!", GetUsernameString(user)));
                         } else {
-                            toastsScript.Toast(ToastType.SUB, string.Format("{0} subscribed for {1} months!", GetUsernameString(user), cumulative));
+                            toastsScript.Toast(ToastType.SUB, string.Format("{0} subscribed for {1} months!", GetUsernameString(user), streak));
                         }
                     } else {
                         toastsScript.Toast(ToastType.GIFT, string.Format("{0} gifted a subscription to {1}!", GetUsernameString(user), GetUsernameString(recipient)));
@@ -897,8 +907,13 @@ public class GameScript : MonoBehaviour {
             }
         }
         gameWon = false;
-        lightningRound = false;
-        finalizeTimer= 0;
+        if (lightningRound) {
+            lightningRound = false;
+            sfxLightningIntros[lightningSFXIndex].Stop();
+            sfxLightningLoops[lightningSFXIndex].Stop();
+            lightningSFXIndex = (lightningSFXIndex + 1) % sfxLightningIntros.Length;
+        }
+        finalizeTimer = 0;
         finalizeTimerActive = false;
         botScript.Spam();
     }
@@ -1186,7 +1201,7 @@ public class GameScript : MonoBehaviour {
             confetti.Play();
             streamers.Play();
             if (lightningRound) {
-                sfxLightningWin.PlayDelayed(1.25f);
+                sfxLightningWins[lightningSFXIndex].PlayDelayed(1.25f);
             } else {
                 sfxWin.PlayDelayed(1);
             }

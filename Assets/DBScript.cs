@@ -67,7 +67,11 @@ public class DBScript : MonoBehaviour
         SQLiteDataReader reader = command.ExecuteReader();
         Dictionary<string, string> output = new Dictionary<string, string>();
         while (reader.Read()) {
-            output.Add(reader.GetString(0), reader.GetString(1).ToUpper());
+            string title = reader[1] as string;
+            if (title == null) {
+                continue;
+            }
+            output.Add(reader.GetString(0), title.ToUpper());
         }
         return output;
     }
@@ -76,6 +80,13 @@ public class DBScript : MonoBehaviour
         command.CommandType = System.Data.CommandType.Text;
         command.CommandText = string.Format("INSERT INTO user(username, title) VALUES('{0}', '{1}') ON CONFLICT(username) DO UPDATE SET title='{1}'", username, title.ToLower());
         command.ExecuteNonQuery();
+    }
+    public bool HasAnyScore(string username) {
+        SQLiteCommand command = saveConnection.CreateCommand();
+        command.CommandType = System.Data.CommandType.Text;
+        command.CommandText = string.Format("SELECT 1 FROM monthly_score WHERE username = '{0}'", username);
+        SQLiteDataReader reader = command.ExecuteReader();
+        return reader.HasRows;
     }
     public Dictionary<string, int> LoadScores(string month) {
         SQLiteCommand command = saveConnection.CreateCommand();
@@ -94,8 +105,24 @@ public class DBScript : MonoBehaviour
         }
         SQLiteCommand command = saveConnection.CreateCommand();
         command.CommandType = System.Data.CommandType.Text;
-        command.CommandText = string.Format("REPLACE INTO monthly_score(month, username, score) VALUES {1}", month, string.Join(" ", scores.Select(kvp => string.Format("('{0}', '{1}', {2})", month, kvp.Key, kvp.Value))));
-        Debug.Log(command.CommandText);
+        command.CommandText = string.Format("REPLACE INTO monthly_score(month, username, score) VALUES {1}", month, string.Join(", ", scores.Select(kvp => string.Format("('{0}', '{1}', {2})", month, kvp.Key, kvp.Value))));
+        command.ExecuteNonQuery();
+    }
+    public bool HasFollowed(string username) {
+        SQLiteCommand command = saveConnection.CreateCommand();
+        command.CommandType = System.Data.CommandType.Text;
+        command.CommandText = string.Format("SELECT followed FROM user WHERE username = '{0}'", username);
+        SQLiteDataReader reader = command.ExecuteReader();
+        if (!reader.HasRows) {
+            return false;
+        }
+        reader.Read();
+        return reader.GetInt32(0) == 1;
+    }
+    public void Follow(string username) {
+        SQLiteCommand command = saveConnection.CreateCommand();
+        command.CommandType = System.Data.CommandType.Text;
+        command.CommandText = string.Format("INSERT INTO user(username, followed) VALUES('{0}', {1}) ON CONFLICT(username) DO UPDATE SET followed={1}", username, 1);
         command.ExecuteNonQuery();
     }
 

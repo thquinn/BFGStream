@@ -110,6 +110,6 @@ public class Util {
     }
 
     public static string GetMonthString() {
-        return System.DateTime.Now.ToString("MM/yyyy");
+        return System.DateTime.Now.ToString("yyyy/MM");
     }
 }
