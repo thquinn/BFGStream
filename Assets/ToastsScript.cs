@@ -10,6 +10,7 @@ public class ToastsScript : MonoBehaviour
 
     public GameObject toastPrefab;
     public GameScript gameScript;
+    public WipeScript wipeScript;
     public Sprite[] toastTypeIcons;
     public AudioSource sfxToast;
 
@@ -31,6 +32,9 @@ public class ToastsScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (wipeScript.IsUp()) {
+            return;
+        }
         if (timer > 0) {
             timer--;
         } else {

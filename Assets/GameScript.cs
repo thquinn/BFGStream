@@ -39,7 +39,7 @@ public class GameScript : MonoBehaviour {
     }
 
     static readonly string[] ROUND_NAMES = new string[] { "Nonesie", "Onesie", "Twofer", "Threepeat", "Four Score", "Five Guys", "Six Pack", "Seventh Heaven", "Eight Ball", "Nine Iron",
-                                                          "Ten Speed", "Elevensies", "Ocean's Twelve", "Lucky Thirteen", "February Fourteen", "Fifteen Puzzle", "Sweet Sixteen", "Seventeen Magazine", "Eighteen Holes", "Hey Nineteen",
+                                                          "Ten Speed", "Elevensies", "Ocean's Twelve", "Lucky Thirteen", "February Fourteen", "Freshman Fifteen", "Sweet Sixteen", "Seventeen Magazine", "Eighteen Holes", "Hey Nineteen",
                                                           "Twentsie", "Forever Twenty-One", "Catch Twenty-Two", "Twenty-Three Skidoo", "Twenty-Four Karat", "Twenty-Five Cents", "Twenty-Six Letters", "Twenty-Seven Dresses", "Twenty-Eight Days Later", "Refinery Twenty-Nine",
                                                           "Thirtsie", "Thirty-One Flavors", "Fat Thirty-Two" };
     static readonly int[] ROUND_POINTS = new int[] { 2000, 400, 300, 250, 225, 200, 180, 160, 150, 140, 130, 120, 110, 100, 90, 80, 70, 60, 50 };
@@ -48,6 +48,7 @@ public class GameScript : MonoBehaviour {
     public static Color SUB_COLOR = new Color(1, 0.6471f, 0.7059f);
     public static string SUB_COLOR_HEX_STRING = "#" + ColorUtility.ToHtmlStringRGB(GameScript.SUB_COLOR);
     public static int BASE_VIEWER_POPUP_COUNT = 8;
+    static readonly int ONESIE_MODE_ROUNDS = 8;
     public static Regex WORD_REGEX = new Regex("[^a-z0-9]");
 
     public static Dictionary<string, string> viewerTitles = new Dictionary<string, string>();
@@ -90,9 +91,10 @@ public class GameScript : MonoBehaviour {
     int lightningSFXIndex = 0;
     float countdownVolume;
     // Text resources.
-    public TextAsset lemmas, dictionaryAsset;
+    public TextAsset lemmas, dictionaryAsset, usageAsset;
     HashSet<Tuple<string, string>> lemmaMatches;
     Dictionary<string, string> dictionaryDefinitions;
+    string[] wordsByUsage;
 
     // Game configuration.
     public List<string> players;
@@ -119,9 +121,11 @@ public class GameScript : MonoBehaviour {
     bool freezeLeaderboard;
     int logFileSuffix;
     public bool lightningRound;
+    int onesieMode;
 
     void Start() {
         Application.targetFrameRate = 60;
+        AudioListener.volume = .5f;
 
         players = CONFIG["host_usernames"].Split(',').ToList();
         displayNames = CONFIG["host_display_names"].Split(',').ToList();
@@ -168,6 +172,7 @@ public class GameScript : MonoBehaviour {
         }
         LoadLemmas(); // TODO: Once this is tested, disable in the editor.
         LoadDictionary();
+        LoadUsages();
     }
 
     void Update() {
@@ -315,6 +320,13 @@ public class GameScript : MonoBehaviour {
         if (Input.GetButtonDown("Lightning Round") && words.Count == 0) {
             lightningRound = true;
         }
+        if (Input.GetButtonDown("Lightning Onesies") && words.Count == 0) {
+            lightningRound = true;
+            onesieMode = ONESIE_MODE_ROUNDS + 2;
+            for (int i = 0; i < players.Count; i++) {
+                pendingWords[i] = "ONESIEROUNDDEBUG";
+            }
+        }
         if (Input.GetButtonDown("Toggle Wipe")) {
             ToggleWipe();
         }
@@ -365,22 +377,6 @@ public class GameScript : MonoBehaviour {
         for (int i = 0; i < pendingWords.Length; i++) {
             pendingLastFrame[i] = pendingWords[i] != null;
         }
-        // Update the top panel.
-        int roundNumber = words.Count;
-        if (gameWon) {
-            roundNumber--;
-        }
-        roundTMP.text = roundNumber < ROUND_NAMES.Length ? ROUND_NAMES[roundNumber] : "Round " + roundNumber;
-        int roundPoints = roundNumber == 0 ? 0 : GetPoints(roundNumber);
-        roundPointsTMP.text = roundPoints + (roundPoints == 1 ? " point" : " points");
-        if (words.Count == 0) {
-            viewersTMP.text = "Starting a new game...";
-        } else if (gameWon) {
-            viewersTMP.text = "Victory!";
-        } else {
-            int viewerCount = viewerWords.Keys.Where(k => !k.EndsWith("!")).Count();
-            viewersTMP.text = viewerCount + (viewerCount == 1 ? " viewer locked in" : " viewers locked in");
-        }
         // Update the timer.
         bool allWordsSubmitted = true;
         foreach (string pendingWord in pendingWords) {
@@ -417,8 +413,8 @@ public class GameScript : MonoBehaviour {
         // Lightning round music.
         if (lightningRound && words.Count > 0 && !gameWon) {
             if (!sfxLightningIntros[lightningSFXIndex].isPlaying && !sfxLightningLoops[lightningSFXIndex].isPlaying) {
-                sfxLightningIntros[lightningSFXIndex].volume = .2f;
-                sfxLightningLoops[lightningSFXIndex].volume = lightningSFXIndex == 0 ? .2f : .3f;
+                sfxLightningIntros[lightningSFXIndex].volume = lightningSFXIndex == 0 ? .2f : .4f;
+                sfxLightningLoops[lightningSFXIndex].volume = lightningSFXIndex == 0 ? .2f : .4f;
                 sfxLightningIntros[lightningSFXIndex].Play();
                 sfxLightningLoops[lightningSFXIndex].PlayScheduled(AudioSettings.dspTime + sfxLightningIntros[lightningSFXIndex].clip.length);
             }
@@ -431,7 +427,26 @@ public class GameScript : MonoBehaviour {
                 sfxLightningLoops[lightningSFXIndex].Stop();
             }
         }
-
+        // Update the top panel.
+        int roundNumber = words.Count;
+        if (gameWon) {
+            roundNumber--;
+        }
+        if (onesieMode == 0) {
+            roundTMP.text = roundNumber < ROUND_NAMES.Length ? ROUND_NAMES[roundNumber] : "Round " + roundNumber;
+        } else {
+            roundTMP.text = string.Format("Onesie Mode ({0})", Math.Min(onesieMode - 1, ONESIE_MODE_ROUNDS));
+        }
+        int roundPoints = roundNumber == 0 ? 0 : GetPoints(roundNumber);
+        roundPointsTMP.text = roundPoints + (roundPoints == 1 ? " point" : " points");
+        if (words.Count == 0) {
+            viewersTMP.text = "Starting a new game...";
+        } else if (gameWon) {
+            viewersTMP.text = "Victory!";
+        } else {
+            int viewerCount = viewerWords.Keys.Where(k => !k.EndsWith("!")).Count();
+            viewersTMP.text = viewerCount + (viewerCount == 1 ? " viewer locked in" : " viewers locked in");
+        }
         // Update the words panel.
         float wordsBannerTargetX, wordsTextsTargetX;
         if (wordsTMP.text.Length == 0) {
@@ -913,6 +928,7 @@ public class GameScript : MonoBehaviour {
             sfxLightningLoops[lightningSFXIndex].Stop();
             lightningSFXIndex = (lightningSFXIndex + 1) % sfxLightningIntros.Length;
         }
+        onesieMode = 0;
         finalizeTimer = 0;
         finalizeTimerActive = false;
         botScript.Spam();
@@ -1025,13 +1041,35 @@ public class GameScript : MonoBehaviour {
         }
         string[] winningWords = wordToPlayerIndex.Where(kvp => kvp.Value.Count > 1).Select(kvp => kvp.Key).ToArray();
         for (int i = 0; i < newestWordScripts.Length; i++) {
-            int winIndex = Array.IndexOf(winningWords, newestWords[i]);
+            int winIndex = onesieMode > 0 ? -1 : Array.IndexOf(winningWords, newestWords[i]);
             newestWordScripts[i] = Instantiate(newestWordPrefab, ui.transform).GetComponent<NewestWordScript>();
-            newestWordScripts[i].Set(i, players.Count, newestWords[i], winIndex, winningWords.Length);
+            string displayWord;
+            if (onesieMode == 0) {
+                displayWord = newestWords[i];
+            } else if (onesieMode == 2) {
+                if (newestWordScripts.Length == 2) {
+                    displayWord = new string[] { "GAME", "OVER" }[i];
+                } else if (newestWordScripts.Length == 3) {
+                    displayWord = new string[] { "IT'S", "THE", "END" }[i];
+                } else if (newestWordScripts.Length == 4) {
+                    displayWord = new string[] { "GAME", "OVER", "GAME", "OVER" }[i];
+                } else {
+                    displayWord = "FINIS";
+                }
+            } else {
+                displayWord = GetRandomWordByUsage();
+            }
+            newestWordScripts[i].Set(i, players.Count, displayWord, winIndex, winningWords.Length);
         }
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < words.Count - 1; i++) {
-            sb.AppendLine(string.Join(" / ", words[i]).ToUpper());
+        if (onesieMode == 0) {
+            for (int i = 0; i < words.Count - 1; i++) {
+                sb.AppendLine(string.Join(" / ", words[i]).ToUpper());
+            }
+        } else {
+            for (int i = 1; i < words.Count; i++) {
+                sb.AppendLine(string.Join(" / ", words[i]).ToUpper());
+            }
         }
         wordsTMP.text = sb.ToString();
 
@@ -1068,7 +1106,11 @@ public class GameScript : MonoBehaviour {
         string[] sortedViewers = viewerWords.Keys.OrderByDescending(v => subscribers.Contains(v))
                                                  .ThenByDescending(v => doubledUpViewers.Contains(v))
                                                  .ThenByDescending(v => viewerScores.GetScore(v)).ToArray();
-        int viewerPopupCount = BASE_VIEWER_POPUP_COUNT - 2 * winningWords.Length + 2;
+        int viewerPopupCount = BASE_VIEWER_POPUP_COUNT + 2;
+        if (onesieMode > 0) {
+            // If words are moving to the center of the screen, we need the viewer popup shorter to make room.
+            viewerPopupCount -= 2 * winningWords.Length;
+        }
         Dictionary<string, List<int>> matchIndices = new Dictionary<string, List<int>>();
         foreach (string viewer in sortedViewers) {
             string canonicalViewer = Util.CanonicalizeViewer(viewer);
@@ -1191,13 +1233,17 @@ public class GameScript : MonoBehaviour {
             botScript.WhisperAdmin("OTHER SUBMISSIONS: " + sb.ToString());
         }
         // Award the players points for matching with each other.
-        if (winningWords.Length > 0) {
-            gameWon = true;
-            for (int i = 0; i < scores.Length; i++) {
-                if (winningWords.Contains(newestWords[i])) {
-                    scores[i] += roundPointValue * (wordToPlayerIndex[newestWords[i]].Count - 1);
-                }
+        for (int i = 0; i < scores.Length; i++) {
+            if (winningWords.Contains(newestWords[i])) {
+                scores[i] += roundPointValue * (wordToPlayerIndex[newestWords[i]].Count - 1);
             }
+        }
+        if (onesieMode > 0) {
+            onesieMode--;
+        }
+        // End the game.
+        if (winningWords.Length > 0 && onesieMode <= 1) {
+            gameWon = true;
             confetti.Play();
             streamers.Play();
             if (lightningRound) {
@@ -1213,6 +1259,9 @@ public class GameScript : MonoBehaviour {
     }
 
     bool WordUsed(string input) {
+        if (onesieMode > 0) {
+            return false;
+        }
         foreach (string[] round in words) {
             foreach (string word in round) {
                 if (IsLemmaMatch(input, word)) {
@@ -1223,6 +1272,9 @@ public class GameScript : MonoBehaviour {
         return false;
     }
     int GetPoints(int roundNumber) {
+        if (onesieMode > 0) {
+            return ROUND_POINTS[1];
+        }
         return ROUND_POINTS[Mathf.Min(roundNumber, ROUND_POINTS.Length - 1)];
     }
     void GrantTitle(string admin, string message) {
@@ -1312,6 +1364,26 @@ public class GameScript : MonoBehaviour {
             return dictionaryDefinitions[word];
         }
         return null;
+    }
+
+    void LoadUsages() {
+        wordsByUsage = Regex.Split(usageAsset.text, "\r\n|\n|\r").Select(s => s.Split('\t')[0]).ToArray();
+    }
+    HashSet<string> usedByUsage = new HashSet<string>();
+    string GetRandomWordByUsage() {
+        float selector = UnityEngine.Random.value;
+        // Pick from the early part of the array more often.
+        selector -= UnityEngine.Random.value * selector;
+        int index = Mathf.FloorToInt(selector * wordsByUsage.Length);
+        if (index == wordsByUsage.Length) {
+            index--;
+        }
+        string word = wordsByUsage[index];
+        if (usedByUsage.Contains(word)) {
+            return GetRandomWordByUsage();
+        }
+        usedByUsage.Add(word);
+        return word;
     }
 
     string JoinAwardeesGrammatically(string[] usernames) {

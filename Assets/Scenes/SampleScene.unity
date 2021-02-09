@@ -620,6 +620,7 @@ MonoBehaviour:
   toastPrefab: {fileID: 8444010991720290217, guid: 6bae803821d970946b20a0c9d68c5092,
     type: 3}
   gameScript: {fileID: 1468223714}
+  wipeScript: {fileID: 601310812}
   toastTypeIcons:
   - {fileID: 21300000, guid: a99a8c36abd74c748bb5c0006324d02f, type: 3}
   - {fileID: 21300000, guid: 3f063f11071748a43bd79d2e9d9e64ce, type: 3}
@@ -22310,6 +22311,7 @@ MonoBehaviour:
   - {fileID: 241271545}
   lemmas: {fileID: 4900000, guid: 2f4d365f22bfde24d87c51e02dea8ae0, type: 3}
   dictionaryAsset: {fileID: 4900000, guid: 5ce65e78f9e9ecc429af6620c98f5b57, type: 3}
+  usageAsset: {fileID: 4900000, guid: 990a2097444298c46b786769d9a12e7d, type: 3}
   players:
   - droolychen
   - swarrizard
